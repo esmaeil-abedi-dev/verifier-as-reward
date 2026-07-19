@@ -254,15 +254,20 @@ DEFAULT_MODEL_LADDER = [
 
 RETRYABLE_HTTP = (408, 429, 500, 502, 503, 529)
 
+_sleep = time.sleep  # backoff indirection; tests stub this, not time.sleep
+
 
 def load_dotenv(path: str = ".env") -> None:
     """Minimal stdlib .env loader: KEY=VALUE lines, '#' comments, optional
-    surrounding quotes. Existing environment variables always win."""
+    'export ' prefixes, optional surrounding quotes; BOM-safe. Existing
+    environment variables always win."""
     if not os.path.exists(path):
         return
-    with open(path) as f:
+    with open(path, encoding="utf-8-sig") as f:
         for line in f:
             line = line.strip()
+            if line.startswith("export "):
+                line = line[len("export "):].lstrip()
             if not line or line.startswith("#") or "=" not in line:
                 continue
             key, _, value = line.partition("=")
@@ -274,10 +279,12 @@ def load_dotenv(path: str = ".env") -> None:
 def model_ladder() -> list:
     """Model IDs from env vars named *_MODEL (e.g. SMALL_MODEL=...,
     FRONTIER_MODEL=...), one variable per ladder slot, ordered by variable
-    name for determinism. With no *_MODEL vars set, falls back to the
-    built-in default ladder."""
+    name for determinism. Only values shaped like OpenRouter IDs
+    ('org/model') count, so unrelated shell vars such as ANTHROPIC_MODEL or
+    OLLAMA_MODEL cannot silently hijack the ladder. With no matching vars,
+    falls back to the built-in default ladder."""
     slots = {k: v.strip() for k, v in os.environ.items()
-             if k.endswith("_MODEL") and v.strip()}
+             if k.endswith("_MODEL") and "/" in v}
     if slots:
         return [slots[k] for k in sorted(slots)]
     return list(DEFAULT_MODEL_LADDER)
@@ -303,6 +310,8 @@ def make_openrouter_backend(model_id: str, api_key: Optional[str] = None,
     with exponential backoff; a call that still fails raises, which
     run_eval records as a parse failure — the safe, non-authorizing
     outcome."""
+    if max_retries < 1:
+        raise ValueError("max_retries must be >= 1")
     api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         raise RuntimeError(
@@ -323,25 +332,38 @@ def make_openrouter_backend(model_id: str, api_key: Optional[str] = None,
                 data = _post_json(OPENROUTER_URL, payload, api_key, timeout)
             except urllib.error.HTTPError as e:
                 if e.code in RETRYABLE_HTTP and not last:
-                    time.sleep(delay)
+                    _sleep(delay)
                     delay *= 2
                     continue
                 raise
             except (urllib.error.URLError, TimeoutError, OSError):
                 if not last:
-                    time.sleep(delay)
+                    _sleep(delay)
                     delay *= 2
                     continue
                 raise
             if "error" in data:  # OpenRouter can return errors with HTTP 200
                 code = data["error"].get("code")
                 if code in RETRYABLE_HTTP and not last:
-                    time.sleep(delay)
+                    _sleep(delay)
                     delay *= 2
                     continue
                 raise RuntimeError(f"OpenRouter error for {model_id}: "
                                    f"{data['error']}")
-            return data["choices"][0]["message"]["content"]
+            choice = data["choices"][0]
+            content = choice["message"].get("content")
+            if not isinstance(content, str) or not content.strip():
+                # Reasoning models (e.g. deepseek-r1) can exhaust the token
+                # budget mid-reasoning and return empty content. Raise with
+                # diagnostics so the parse failure is attributable instead
+                # of silently deflating the model's score.
+                raise RuntimeError(
+                    f"empty content from {model_id} "
+                    f"(finish_reason={choice.get('finish_reason')!r}, "
+                    f"has_reasoning="
+                    f"{bool(choice['message'].get('reasoning'))})")
+            return content
+        raise AssertionError("unreachable: retry loop must raise or return")
 
     return answer
 
@@ -480,9 +502,8 @@ def main() -> None:
                     help="registered baseline names and/or "
                          "'openrouter:<model_id>' entries")
     ap.add_argument("--ladder", action="store_true",
-                    help="append the OpenRouter model ladder "
-                         "(OPENROUTER_MODELS env var, or the built-in "
-                         "default) to --backends")
+                    help="append the OpenRouter model ladder (*_MODEL env "
+                         "vars, or the built-in default) to --backends")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--out", default="proofoflife_results.json")
     ap.add_argument("--keep-records", action="store_true",
@@ -504,7 +525,11 @@ def main() -> None:
         raise SystemExit(f"unknown backend {name!r}; available: "
                          f"{sorted(backends)} or 'openrouter:<model_id>'")
 
-    resolved = [(name, resolve(name)) for name in names]  # fail fast
+    try:
+        resolved = [(name, resolve(name)) for name in names]  # fail fast
+    except RuntimeError as e:  # e.g. missing API key -> clean one-liner
+        raise SystemExit(str(e))
+    print("backends to run: " + ", ".join(names))
     results = {
         "test_file": args.test_file,
         "seed": args.seed,

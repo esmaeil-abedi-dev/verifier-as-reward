@@ -311,16 +311,16 @@ def _http_error(code):
 
 def _with_transport(script, fn, **backend_kw):
     transport = _MockTransport(script)
-    orig_post, orig_sleep = eval_harness._post_json, eval_harness.time.sleep
+    orig_post, orig_sleep = eval_harness._post_json, eval_harness._sleep
     eval_harness._post_json = transport
-    eval_harness.time.sleep = lambda s: None  # no real backoff in tests
+    eval_harness._sleep = lambda s: None  # no real backoff in tests
     try:
         backend = make_openrouter_backend(
             "test/model-1", api_key="sk-test", **backend_kw)
         return fn(backend), transport
     finally:
         eval_harness._post_json = orig_post
-        eval_harness.time.sleep = orig_sleep
+        eval_harness._sleep = orig_sleep
 
 
 def test_openrouter_request_shape():
@@ -380,6 +380,33 @@ def test_openrouter_http200_error_body():
     assert out == "raised"
 
 
+def test_openrouter_empty_content_raises_with_diagnostics():
+    # reasoning models can burn the budget mid-reasoning and return empty
+    # content; that must be an attributable error, not a silent None
+    def run(b):
+        try:
+            b("p")
+            return "no-raise"
+        except RuntimeError as e:
+            return str(e)
+
+    for content in ("", "   ", None):
+        reply = {"choices": [{"message": {"content": content,
+                                          "reasoning": "thinking..."},
+                              "finish_reason": "length"}]}
+        out, _ = _with_transport([reply], run)
+        assert "empty content" in out and "finish_reason='length'" in out \
+            and "has_reasoning=True" in out, out
+
+
+def test_openrouter_invalid_max_retries():
+    try:
+        make_openrouter_backend("test/model-1", api_key="k", max_retries=0)
+        assert False, "max_retries=0 must be rejected"
+    except ValueError:
+        pass
+
+
 def test_openrouter_key_handling():
     # missing key -> clear error at construction time
     saved = os.environ.pop("OPENROUTER_API_KEY", None)
@@ -405,16 +432,21 @@ def test_openrouter_key_handling():
 def test_dotenv_and_ladder():
     with tempfile.TemporaryDirectory() as d:
         path = os.path.join(d, ".env")
-        with open(path, "w") as f:
-            f.write("# comment\nDOTENV_TEST_KEY='v1'\nDOTENV_TEST_KEY2=v2\n")
+        with open(path, "wb") as f:
+            f.write("﻿# comment\nDOTENV_TEST_KEY='v1'\r\n"
+                    "DOTENV_TEST_KEY2=v2\nexport DOTENV_TEST_KEY3=v3\n"
+                    .encode("utf-8"))  # BOM + CRLF + export prefix
         os.environ["DOTENV_TEST_KEY"] = "already-set"
         try:
             load_dotenv(path)
             assert os.environ["DOTENV_TEST_KEY"] == "already-set"  # env wins
             assert os.environ["DOTENV_TEST_KEY2"] == "v2"
+            assert os.environ["DOTENV_TEST_KEY3"] == "v3"  # export stripped
+            assert "﻿DOTENV_TEST_KEY" not in os.environ  # BOM-safe
         finally:
-            os.environ.pop("DOTENV_TEST_KEY", None)
-            os.environ.pop("DOTENV_TEST_KEY2", None)
+            for k in ("DOTENV_TEST_KEY", "DOTENV_TEST_KEY2",
+                      "DOTENV_TEST_KEY3"):
+                os.environ.pop(k, None)
     load_dotenv(os.path.join(REPO, "no-such-file"))  # absent file is a no-op
     saved = {k: os.environ.pop(k) for k in list(os.environ)
              if k.endswith("_MODEL")}
@@ -422,9 +454,13 @@ def test_dotenv_and_ladder():
         assert model_ladder() == DEFAULT_MODEL_LADDER
         os.environ["SMALL_MODEL"] = " a/b "
         os.environ["FRONTIER_MODEL"] = "c/d"
-        os.environ["EMPTY_MODEL"] = "   "  # blank slots are ignored
-        # one var per slot, ordered by variable name, whitespace stripped
-        assert model_ladder() == ["c/d", "a/b"]
+        os.environ["EMPTY_MODEL"] = "   "        # blank slots are ignored
+        os.environ["ANTHROPIC_MODEL"] = "opus"   # not an org/model ID:
+        try:                                     # must not hijack the ladder
+            # one var per slot, ordered by variable name, whitespace stripped
+            assert model_ladder() == ["c/d", "a/b"]
+        finally:
+            os.environ.pop("ANTHROPIC_MODEL", None)
     finally:
         for k in ("SMALL_MODEL", "FRONTIER_MODEL", "EMPTY_MODEL"):
             os.environ.pop(k, None)
