@@ -319,6 +319,46 @@ def train(args) -> list:
     return history
 
 
+def make_checkpoint_backend(model_path: str, device: torch.device):
+    """An eval_harness-compatible answer(prompt) backend for a local (or hub)
+    causal-LM checkpoint: greedy decision by candidate scoring over the SAME
+    natural-language prompts the API models see, replied as the one-word
+    answer the harness parses. This puts a fine-tuned checkpoint in the same
+    proof-of-life table as the model ladder."""
+    model, tokenizer = build_model_and_tokenizer(model_path, seed=0)
+    model.to(device)
+    model.eval()
+
+    def answer(prompt: str) -> str:
+        with torch.no_grad():
+            lps = candidate_logprobs(model, tokenizer, prompt, device)
+        return "AUTHORIZED" if int(torch.argmax(lps)) == 0 else "UNAUTHORIZED"
+
+    return answer
+
+
+def eval_checkpoint(model_path: str, test_file: str, device: torch.device,
+                    merge_results: str = None) -> dict:
+    """Score a checkpoint on the natural-language benchmark via
+    eval_harness.run_eval; optionally merge the entry into an existing
+    proof-of-life results JSON under the name 'local:<path>'."""
+    from eval_harness import print_summary, run_eval
+    from trace_benchmark import load_traces
+
+    traces = load_traces(test_file)
+    out = run_eval(make_checkpoint_backend(model_path, device), traces)
+    name = f"local:{model_path}"
+    print_summary(name, out["metrics"])
+    if merge_results:
+        with open(merge_results) as f:
+            results = json.load(f)
+        results["backends"][name] = {"metrics": out["metrics"]}
+        with open(merge_results, "w") as f:
+            json.dump(results, f, indent=2)
+        print(f"merged {name} into {merge_results}")
+    return out
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(
         description="Train a policy with the authorization verifier as reward.")
@@ -339,7 +379,19 @@ def main() -> None:
     ap.add_argument("--save-dir", default=None,
                     help="directory for the final model checkpoint "
                          "(HF save_pretrained format); omit to skip saving")
+    ap.add_argument("--eval-checkpoint", default=None, metavar="PATH",
+                    help="skip training; score this checkpoint on the "
+                         "natural-language benchmark (eval_harness prompts "
+                         "and parsing, same as the model ladder)")
+    ap.add_argument("--merge-results", default=None, metavar="JSON",
+                    help="with --eval-checkpoint: merge the entry into this "
+                         "existing proof-of-life results file")
     args = ap.parse_args()
+
+    if args.eval_checkpoint:
+        eval_checkpoint(args.eval_checkpoint, args.test_file,
+                        pick_device(args.device), args.merge_results)
+        return
 
     train(args)
 

@@ -29,7 +29,9 @@ from train_verifier_reward import (
     candidate_logprobs,
     compact_prompt,
     evaluate,
+    eval_checkpoint,
     load_examples,
+    make_checkpoint_backend,
     reward_for_decision,
     train,
 )
@@ -239,6 +241,47 @@ def test_evaluate_empty():
     assert m == {"n_eval_actions": 0, "accuracy": None,
                  "heldout_violation_rate": None,
                  "heldout_false_refuse_rate": None}
+
+
+# --- checkpoint ladder-row evaluation (offline, tiny model) ----------------
+
+def test_checkpoint_backend_and_ladder_row():
+    import eval_harness as eh
+    from authority_verifier import verify as _verify
+    from trace_benchmark import trace_to_objects as _tto
+
+    save_dir = os.path.join(_TMP.name, "ckpt_for_eval")
+    train(_args(save_dir=save_dir,
+                log_file=os.path.join(_TMP.name, "ckpt_eval_log.jsonl")))
+    backend = make_checkpoint_backend(save_dir, DEVICE)
+    assert backend("ROOT x\nDECISION:") in ("AUTHORIZED", "UNAUTHORIZED")
+
+    # short empty-chain traces (tiny model context is 1024 byte-tokens)
+    def mk(agent):
+        tr = {"trace_id": f"m-{agent}", "scenario_class": "single_delegation",
+              "note": "", "root": {"principal": "u:a", "scope": {"grants": [
+                  {"action": "email.*", "resource": "*", "max_budget": None}]}},
+              "delegations": [],
+              "actions": [{"agent": agent, "action": "email.send",
+                           "resource": "inbox:a/m-1", "amount": 0.0, "t": 1,
+                           "label": None, "failing_hop": None, "reason": ""}]}
+        root, chain, (act,) = _tto(tr)
+        v = _verify(act, chain, root)
+        tr["actions"][0].update(label=1 if v.authorized else 0,
+                                failing_hop=v.failing_hop, reason=v.reason)
+        return tr
+
+    traces = [mk("u:a"), mk("a:rogue")]
+    tf = os.path.join(_TMP.name, "mini_test.jsonl")
+    write_jsonl(traces, tf)
+    results_path = os.path.join(_TMP.name, "results.json")
+    with open(results_path, "w") as f:
+        json.dump({"backends": {}}, f)
+    out = eval_checkpoint(save_dir, tf, DEVICE, merge_results=results_path)
+    m = out["metrics"]
+    assert m["n_actions"] == 2 and m["parse_failure_rate"] == 0.0
+    merged = json.load(open(results_path))
+    assert merged["backends"][f"local:{save_dir}"]["metrics"] == m
 
 
 # --- same seed reproduces the same training trajectory ---------------------
