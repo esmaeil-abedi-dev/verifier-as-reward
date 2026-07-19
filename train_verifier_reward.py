@@ -79,10 +79,17 @@ class ByteTokenizer:
         return list(text.encode("utf-8", errors="replace"))
 
 
-def build_model_and_tokenizer(name: str, seed: int):
+def build_model_and_tokenizer(name: str, seed: int,
+                              attn_implementation: str = None):
     """`tiny` builds a local random-weight model (offline). Anything else is
-    resolved through Hugging Face (may download on first use)."""
+    resolved through Hugging Face (may download on first use).
+
+    attn_implementation="eager" is REQUIRED on MPS: the fused SDPA backward
+    kernel produces NaN gradients for this model family on Apple silicon
+    (empirically: all-NaN grads on the very first backward)."""
     torch.manual_seed(seed)
+    kw = {"attn_implementation": attn_implementation} \
+        if attn_implementation else {}
     if name == "tiny":
         from transformers import GPT2Config, GPT2LMHeadModel
         config = GPT2Config(vocab_size=256, n_positions=1024,
@@ -92,10 +99,10 @@ def build_model_and_tokenizer(name: str, seed: int):
             os.path.join(name, "tokenizer_config.json")):
         # a saved tiny-model checkpoint: weights only, byte tokenizer
         from transformers import AutoModelForCausalLM
-        return AutoModelForCausalLM.from_pretrained(name), ByteTokenizer()
+        return AutoModelForCausalLM.from_pretrained(name, **kw), ByteTokenizer()
     from transformers import AutoModelForCausalLM, AutoTokenizer
     tok = AutoTokenizer.from_pretrained(name)
-    model = AutoModelForCausalLM.from_pretrained(name)
+    model = AutoModelForCausalLM.from_pretrained(name, **kw)
 
     class _HFWrapper:
         hf_tokenizer = tok  # kept for checkpoint saving
@@ -245,7 +252,8 @@ def train(args) -> list:
     device = pick_device(args.device)
     if args.save_dir:  # fail on an unusable path now, not after N steps
         os.makedirs(args.save_dir, exist_ok=True)
-    model, tokenizer = build_model_and_tokenizer(args.model, args.seed)
+    attn = "eager" if device.type == "mps" else None
+    model, tokenizer = build_model_and_tokenizer(args.model, args.seed, attn)
     model.to(device)
     model.train()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
@@ -305,6 +313,9 @@ def train(args) -> list:
             loss.backward()
             step_loss += loss.detach()
             rewards.append(r)
+        if args.clip_grad_norm > 0:
+            torch.nn.utils.clip_grad_norm_(model.parameters(),
+                                           args.clip_grad_norm)
         opt.step()
         mean_reward = sum(rewards) / len(rewards)
         baseline = 0.9 * baseline + 0.1 * mean_reward
@@ -330,7 +341,9 @@ def make_checkpoint_backend(model_path: str, device: torch.device):
     natural-language prompts the API models see, replied as the one-word
     answer the harness parses. This puts a fine-tuned checkpoint in the same
     proof-of-life table as the model ladder."""
-    model, tokenizer = build_model_and_tokenizer(model_path, seed=0)
+    attn = "eager" if device.type == "mps" else None
+    model, tokenizer = build_model_and_tokenizer(model_path, seed=0,
+                                                 attn_implementation=attn)
     model.to(device)
     model.eval()
 
@@ -372,6 +385,8 @@ def main() -> None:
     ap.add_argument("--steps", type=int, default=2)
     ap.add_argument("--batch-size", type=int, default=4)
     ap.add_argument("--lr", type=float, default=1e-3)
+    ap.add_argument("--clip-grad-norm", type=float, default=1.0,
+                    help="max gradient norm per step (0 disables clipping)")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--train-file", default="benchmark_train.jsonl")
     ap.add_argument("--test-file", default="benchmark_test.jsonl")

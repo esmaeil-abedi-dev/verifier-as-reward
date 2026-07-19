@@ -63,6 +63,7 @@ def _args(**over):
     base = dict(model="tiny", steps=2, batch_size=2, lr=1e-3, seed=7,
                 train_file=TRAIN_PATH, test_file=TEST_PATH, eval_every=1,
                 eval_max_actions=8, device="cpu", save_dir=None,
+                clip_grad_norm=1.0,
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
