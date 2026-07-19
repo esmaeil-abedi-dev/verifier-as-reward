@@ -60,7 +60,7 @@ DEVICE = torch.device("cpu")
 def _args(**over):
     base = dict(model="tiny", steps=2, batch_size=2, lr=1e-3, seed=7,
                 train_file=TRAIN_PATH, test_file=TEST_PATH, eval_every=1,
-                eval_max_actions=8, device="cpu",
+                eval_max_actions=8, device="cpu", save_dir=None,
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
@@ -158,11 +158,27 @@ def test_smoke_run_writes_log():
     assert [h["step"] for h in history] == [0, 1, 2]
     with open(args.log_file) as f:
         logged = [json.loads(line) for line in f]
-    assert logged == history
+    # first line records the exact config; the rest are the eval points
+    config = logged[0]
+    assert config["type"] == "config"
+    assert config["args"]["seed"] == args.seed
+    assert config["args"]["model"] == "tiny" and config["device"] == "cpu"
+    assert logged[1:] == history
     for point in history[1:]:
         assert -1.0 <= point["mean_reward"] <= 1.0
         assert point["cumulative_examples"] == point["step"] * args.batch_size
         assert 0.0 <= point["heldout_violation_rate"] <= 1.0
+
+
+# --- final checkpoint is saved in HF format when requested -----------------
+
+def test_checkpoint_saving():
+    save_dir = os.path.join(_TMP.name, "ckpt")
+    train(_args(save_dir=save_dir,
+                log_file=os.path.join(_TMP.name, "ckpt_log.jsonl")))
+    files = set(os.listdir(save_dir))
+    assert "config.json" in files
+    assert any(f.endswith((".safetensors", ".bin")) for f in files), files
 
 
 # --- scores match an independent reference computation ---------------------

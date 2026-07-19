@@ -1,3 +1,4 @@
+{"type": "config", "argv": ["train_verifier_reward.py"], "args": {"model": "tiny", "steps": 2, "batch_size": 4, "lr": 0.001, "seed": 7, "train_file": "benchmark_train.jsonl", "test_file": "benchmark_test.jsonl", "eval_every": 1, "eval_max_actions": 64, "device": "auto", "log_file": "training_log.jsonl", "save_dir": null}, "device": "cpu"}
 {"step": 0, "cumulative_examples": 0, "mean_reward": null, "loss": null, "n_eval_actions": 64, "accuracy": 0.46875, "heldout_violation_rate": 0.7428571428571429, "heldout_false_refuse_rate": 0.27586206896551724}
 {"step": 1, "cumulative_examples": 4, "mean_reward": 0.5, "loss": 0.3578, "n_eval_actions": 64, "accuracy": 0.453125, "heldout_violation_rate": 1.0, "heldout_false_refuse_rate": 0.0}
 {"step": 2, "cumulative_examples": 8, "mean_reward": -0.5, "loss": -0.3559, "n_eval_actions": 64, "accuracy": 0.46875, "heldout_violation_rate": 0.9714285714285714, "heldout_false_refuse_rate": 0.0}

@@ -55,7 +55,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import random
+import sys
 
 import numpy as np
 import torch
@@ -91,6 +93,8 @@ def build_model_and_tokenizer(name: str, seed: int):
     model = AutoModelForCausalLM.from_pretrained(name)
 
     class _HFWrapper:
+        hf_tokenizer = tok  # kept for checkpoint saving
+
         def encode(self, text: str) -> list:
             return tok.encode(text, add_special_tokens=False)
 
@@ -247,6 +251,10 @@ def train(args) -> list:
     history = []
     baseline = 0.0
     log_f = open(args.log_file, "w")
+    # First log line records the exact command + config for reproducibility.
+    log_f.write(json.dumps({"type": "config", "argv": sys.argv,
+                            "args": vars(args), "device": device.type}) + "\n")
+    log_f.flush()
 
     def log_point(step: int, mean_reward, loss):
         point = {
@@ -269,7 +277,9 @@ def train(args) -> list:
     log_point(0, None, None)  # untrained baseline point of the curve
     for step in range(1, args.steps + 1):
         batch = [rng.choice(train_examples) for _ in range(args.batch_size)]
-        losses, rewards = [], []
+        rewards = []
+        step_loss = 0.0
+        opt.zero_grad()
         for ex in batch:
             lps = candidate_logprobs(model, tokenizer, ex["prompt"], device)
             probs = torch.softmax(lps.detach(), dim=0)
@@ -277,20 +287,28 @@ def train(args) -> list:
             decision = 1 if idx == 0 else 0
             r = reward_for_decision(decision, ex)
             log_pi = torch.log_softmax(lps, dim=0)[idx]
-            losses.append(-(r - baseline) * log_pi)
+            loss = -(r - baseline) * log_pi / len(batch)
+            # backward per example: same gradient as a stacked mean, but each
+            # graph is freed immediately — with real models, holding a full
+            # batch of graphs would exhaust memory
+            loss.backward()
+            step_loss += float(loss.detach())
             rewards.append(r)
-        loss = torch.stack(losses).mean()
-        opt.zero_grad()
-        loss.backward()
         opt.step()
         mean_reward = sum(rewards) / len(rewards)
         baseline = 0.9 * baseline + 0.1 * mean_reward
         if step % args.eval_every == 0 or step == args.steps:
-            log_point(step, round(mean_reward, 4),
-                      round(float(loss.detach()), 4))
+            log_point(step, round(mean_reward, 4), round(step_loss, 4))
 
     log_f.close()
     print(f"wrote {args.log_file} ({len(history)} points)")
+
+    if args.save_dir:
+        os.makedirs(args.save_dir, exist_ok=True)
+        model.save_pretrained(args.save_dir)
+        if hasattr(tokenizer, "hf_tokenizer"):
+            tokenizer.hf_tokenizer.save_pretrained(args.save_dir)
+        print(f"saved final checkpoint to {args.save_dir}/")
     return history
 
 
@@ -308,8 +326,12 @@ def main() -> None:
     ap.add_argument("--eval-every", type=int, default=1)
     ap.add_argument("--eval-max-actions", type=int, default=64)
     ap.add_argument("--device", default="auto",
-                    help="auto | cpu | cuda | mps")
+                    help="auto | cpu | cuda | mps (auto picks cuda else cpu; "
+                         "pass mps explicitly on Apple silicon)")
     ap.add_argument("--log-file", default="training_log.jsonl")
+    ap.add_argument("--save-dir", default=None,
+                    help="directory for the final model checkpoint "
+                         "(HF save_pretrained format); omit to skip saving")
     args = ap.parse_args()
 
     train(args)
