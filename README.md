@@ -1,0 +1,119 @@
+# Learnable Authorization: Verifier-as-Reward
+
+Code for the paper *"Learnable Authorization: A Verifier-as-Reward Benchmark
+and Method for AI-Agent Authority."*
+
+**Thesis.** Whether an agent action is authorized — given the delegation
+chain that led to it — is decidable by a deterministic verifier. That
+verdict can therefore serve simultaneously as (a) a benchmark label and
+(b) a training reward. This repository contains the verifier, a labeled
+trace benchmark generated from it, an evaluation harness for frontier
+models, and a training harness that uses the verifier as the reward signal.
+
+Everything runs on a CPU-only machine with no network access (the only
+exception: pointing the training harness at a real Hugging Face model
+downloads its weights).
+
+## The four components
+
+```
+authority_verifier.py      the ground truth: deterministic authorization
+        │                  verifier over attenuated delegation chains
+        │                  (verify / label_action)
+        ▼
+trace_benchmark.py         generates labeled execution traces across 8
+        │                  scenario classes; every label is a verify() call
+        │                  → benchmark_train.jsonl, benchmark_test.jsonl,
+        │                    DATASHEET.md
+        ├──────────────────────────────┐
+        ▼                              ▼
+eval_harness.py               train_verifier_reward.py
+proof-of-life: can a model    REINFORCE loop with label_action() as the
+judge authorization? metrics  reward (+1 match / -1 mismatch); CPU smoke
+vs. verifier labels           test by default, scales to a GPU model
+→ proofoflife_results.json    → training_log.jsonl
+```
+
+- **`authority_verifier.py`** — `Grant` / `Scope` / `Delegation` /
+  `Action` / `RootAuthority`; `verify(action, chain, root) -> Verdict`
+  checks chain structure, per-hop activity (issue/expiry/revocation at the
+  action's logical time), per-hop attenuation (no hop may widen its
+  parent's scope), and final-scope permission. `label_action` maps the
+  verdict to 1/0. **This module is ground truth everywhere; nothing in the
+  repo hand-labels.**
+- **`trace_benchmark.py`** — seeded generator over 5 domains (email,
+  payment, repo, file, db) and 8 scenario classes: `single_delegation`,
+  `multi_hop`, `revocation`, `expiry`, `scope_escalation`,
+  `resource_violation`, `budget_violation`, `attack_confused_deputy`.
+  Corpus is 50/50 authorized/unauthorized by construction and split 80/20
+  train/test at the trace level (class-stratified, no leakage). Schema and
+  limitations are documented in the generated `DATASHEET.md`.
+- **`eval_harness.py`** — renders each test action and its delegation
+  chain as a natural-language prompt, asks a backend for
+  AUTHORIZED/UNAUTHORIZED, and scores it against the verifier label.
+  Backends are any `answer(prompt) -> str` callable; built-ins (no
+  network): `always_authorized`, `random`, and a verifier-backed `oracle`
+  upper bound. Headline metric: **false-authorize rate on the
+  attack/violation classes** — the dangerous error.
+- **`train_verifier_reward.py`** — trains a causal LM to decide
+  AUTHORIZE/REFUSE with the verifier verdict as reward (+1 correct
+  authorize/refuse, −1 false-authorize or false-refuse) via REINFORCE
+  with a running baseline. `--model tiny` (default) is an offline
+  random-weight byte-level GPT-2: the CPU smoke test. Any HF causal LM
+  name scales it up on a GPU. Logs mean reward and held-out violation
+  rate vs. cumulative training examples to `training_log.jsonl`.
+
+## Run everything (acceptance order)
+
+```bash
+# 0. verifier tests (ground truth must be green first)
+PYTHONPATH=. python3 test_authority_verifier.py
+
+# 1. generate the benchmark + its tests
+PYTHONPATH=. python3 trace_benchmark.py --seed 7 --traces-per-class 25
+PYTHONPATH=. python3 test_trace_benchmark.py
+
+# 2. proof-of-life eval on the built-in baselines + its tests
+PYTHONPATH=. python3 eval_harness.py --test-file benchmark_test.jsonl \
+    --out proofoflife_results.json
+PYTHONPATH=. python3 test_eval_harness.py
+
+# 3. training smoke test (CPU, ~1 min) + its tests
+PYTHONPATH=. python3 train_verifier_reward.py
+PYTHONPATH=. python3 test_train_verifier_reward.py
+```
+
+Artifacts produced: `benchmark_train.jsonl`, `benchmark_test.jsonl`,
+`DATASHEET.md`, `proofoflife_results.json`, `training_log.jsonl`.
+
+Reproducibility: all RNGs are seeded; `trace_benchmark.py` with the same
+`--seed`/`--traces-per-class` regenerates byte-identical files, and the
+training smoke run is deterministic on CPU under a fixed `--seed`.
+
+## Wiring in a real model
+
+**Evaluation.** From your own script:
+
+```python
+from eval_harness import run_eval, print_summary
+from trace_benchmark import load_traces
+
+def my_model(prompt: str) -> str:
+    ...  # call your API; return text containing AUTHORIZED/UNAUTHORIZED
+
+out = run_eval(my_model, load_traces("benchmark_test.jsonl"))
+print_summary("my-model", out["metrics"])
+```
+
+**Training at scale** (GPU):
+
+```bash
+PYTHONPATH=. python3 train_verifier_reward.py \
+    --model gpt2 --steps 500 --batch-size 16 --lr 1e-5 --eval-every 25
+```
+
+Without a CUDA GPU the harness runs the smoke test and prints a
+"READY FOR GPU" message with the scale-up command. The reward path
+(`load_examples`, `reward_for_decision`, `candidate_logprobs`) is modular
+and drops directly into a TRL/PPO trainer if you prefer PPO over
+REINFORCE.
