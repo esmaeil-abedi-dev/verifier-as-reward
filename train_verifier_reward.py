@@ -34,9 +34,13 @@ smoke test by default) and prints a clear "ready for GPU" message with the
 scale-up command.
 
 Logging: every eval writes a JSON line to training_log.jsonl with the step,
-mean training reward, and held-out violation rate (false-authorize rate on
-unauthorized actions) versus cumulative training examples — the
-does-it-improve-with-scale curve.
+mean training reward, and — on a seeded, shuffled held-out subset —
+accuracy, violation rate (false-authorize rate on unauthorized actions),
+and false-refuse rate, versus cumulative training examples. The
+does-it-improve-with-scale claim must rest on accuracy (or on violation
+rate AND false-refuse rate jointly): violation rate alone collapses to 0
+for a policy that degenerates to always-refuse, which is failure, not
+learning.
 
 Usage (CPU smoke test):
     PYTHONPATH=. python3 train_verifier_reward.py
@@ -182,14 +186,18 @@ def candidate_logprobs(model, tokenizer, prompt: str,
 @torch.no_grad()
 def evaluate(model, tokenizer, examples: list, device: torch.device) -> dict:
     """Greedy-decision metrics on held-out examples. The violation rate is
-    the false-authorize rate on actions the verifier rejects."""
+    the false-authorize rate on actions the verifier rejects; the
+    false-refuse rate is its mirror on actions the verifier authorizes.
+    Report them together — either alone can be driven to 0 by a degenerate
+    always-refuse / always-authorize policy."""
     if not examples:
         return {"n_eval_actions": 0, "accuracy": None,
-                "heldout_violation_rate": None}
+                "heldout_violation_rate": None,
+                "heldout_false_refuse_rate": None}
     model.eval()
     n_correct = 0
-    n_viol = 0
-    n_false_auth = 0
+    n_viol = n_false_auth = 0
+    n_auth = n_false_refuse = 0
     for ex in examples:
         lps = candidate_logprobs(model, tokenizer, ex["prompt"], device)
         decision = 1 if int(torch.argmax(lps)) == 0 else 0
@@ -198,12 +206,17 @@ def evaluate(model, tokenizer, examples: list, device: torch.device) -> dict:
         if verdict == 0:
             n_viol += 1
             n_false_auth += int(decision == 1)
+        else:
+            n_auth += 1
+            n_false_refuse += int(decision == 0)
     model.train()
     return {
         "n_eval_actions": len(examples),
         "accuracy": n_correct / len(examples),
         "heldout_violation_rate":
             (n_false_auth / n_viol) if n_viol else None,
+        "heldout_false_refuse_rate":
+            (n_false_refuse / n_auth) if n_auth else None,
     }
 
 
@@ -223,7 +236,11 @@ def train(args) -> list:
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
     train_examples = load_examples(args.train_file)
-    eval_examples = load_examples(args.test_file)[: args.eval_max_actions]
+    # Seeded shuffle before truncating: a plain [:n] slice of the trace-id-
+    # sorted list would silently drop whole scenario classes from the eval.
+    eval_examples = load_examples(args.test_file)
+    random.Random(args.seed).shuffle(eval_examples)
+    eval_examples = eval_examples[: args.eval_max_actions]
     print(f"device={device.type} model={args.model} "
           f"train_actions={len(train_examples)} eval_actions={len(eval_examples)}")
 
@@ -246,7 +263,8 @@ def train(args) -> list:
             return "n/a" if x is None else f"{x:.3f}"
         print(f"step {step:>4}  reward {str(mean_reward):>6}  "
               f"heldout acc {fmt(point['accuracy'])}  "
-              f"violation rate {fmt(point['heldout_violation_rate'])}")
+              f"violation rate {fmt(point['heldout_violation_rate'])}  "
+              f"false-refuse {fmt(point['heldout_false_refuse_rate'])}")
 
     log_point(0, None, None)  # untrained baseline point of the curve
     for step in range(1, args.steps + 1):

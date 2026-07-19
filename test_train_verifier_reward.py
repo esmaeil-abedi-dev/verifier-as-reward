@@ -221,7 +221,8 @@ def test_evaluate_empty():
     model, tok = build_model_and_tokenizer("tiny", seed=0)
     m = evaluate(model, tok, [], DEVICE)
     assert m == {"n_eval_actions": 0, "accuracy": None,
-                 "heldout_violation_rate": None}
+                 "heldout_violation_rate": None,
+                 "heldout_false_refuse_rate": None}
 
 
 # --- same seed reproduces the same training trajectory ---------------------

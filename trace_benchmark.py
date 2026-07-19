@@ -33,11 +33,22 @@ verifier is ground truth; nothing is hand-labeled. The generator merely
 *constructs* scenarios intended to be authorized or violating, then asserts
 the verifier agrees (a disagreement is a generator bug and aborts).
 
-Scenario classes (8): single_delegation, multi_hop, revocation, expiry,
+Scenario classes (9): single_delegation, multi_hop, revocation, expiry,
 scope_escalation, resource_violation, budget_violation,
-attack_confused_deputy.
+attack_confused_deputy, chain_structure (broken delegator/delegatee links,
+wrong root origin, wrong acting agent, or actions before a hop was issued).
 
-The corpus is balanced 50/50 authorized/unauthorized by construction, and
+To blunt surface-cue shortcuts, some traces carry distractors: decoy grants
+(a second, action-mismatched grant with its own resource glob and spending
+cap in every scope of the chain) and inert revocations/expiries on
+authorized traces (timestamps that appear in the trace but lie after the
+action time). A heuristic that keys on keywords, the last hop's resource
+glob, or the smallest cap mentioned will misfire on them; only associating
+each grant with its action and each timestamp with its hop reproduces the
+verifier.
+
+The corpus is approximately balanced authorized/unauthorized (exact ratio
+depends on chain_structure variant draws; always well within 40-60%), and
 split 80/20 into train/test at the *trace* level (stratified by class, no
 trace straddles the split).
 
@@ -74,6 +85,7 @@ SCENARIO_CLASSES = (
     "resource_violation",
     "budget_violation",
     "attack_confused_deputy",
+    "chain_structure",
 )
 
 TRAIN_FILE = "benchmark_train.jsonl"
@@ -265,21 +277,56 @@ def _scope_ladder(rng: random.Random, domain: dict, ns: str, n_hops: int,
     return concrete, full[start:start + n_hops]
 
 
+def _make_decoy(rng: random.Random, domain: dict, concrete: str) -> Grant:
+    """A distractor grant carried through every scope of a chain: a different
+    action in the same domain, with its own namespace glob and a small
+    spending cap. Its action never matches the trace's acting action, so it
+    can neither authorize a violation nor block a legitimate action — but a
+    heuristic that reads resource globs or caps without checking which
+    action they belong to will misfire on it."""
+    decoy_action = rng.choice([a for a in domain["actions"] if a != concrete])
+    decoy_ns = rng.choice(domain["namespaces"])
+    return Grant(decoy_action, domain["mid"](decoy_ns),
+                 round(rng.uniform(10, 60), 2))
+
+
 def _build_chain(rng: random.Random, root_principal: str, agents: list,
                  domain: dict, ns: str, issued_at: int = 0,
                  ladder_start: int = 0):
-    """A structurally valid, monotonically narrowing chain of len(agents) hops."""
+    """A structurally valid, monotonically narrowing chain of len(agents)
+    hops. About half of all chains carry a decoy grant (see _make_decoy) in
+    every hop's scope; an identical decoy at each hop attenuates trivially."""
     n = len(agents)
     concrete, ladder = _scope_ladder(rng, domain, ns, n, ladder_start)
     budgets = _budget_ladder(rng, n, domain["budgeted"])
+    decoy = _make_decoy(rng, domain, concrete) if rng.random() < 0.5 else None
     chain = []
     delegators = [root_principal] + agents[:-1]
     for i in range(n):
         pat, res = ladder[i]
-        scope = Scope(grants=(Grant(pat, res, budgets[i]),))
-        chain.append(Delegation(delegators[i], agents[i], scope,
+        grants = (Grant(pat, res, budgets[i]),)
+        if decoy is not None:
+            grants = grants + (decoy,)
+        chain.append(Delegation(delegators[i], agents[i], Scope(grants=grants),
                                 issued_at=issued_at))
     return concrete, chain, budgets
+
+
+def _add_inert_validity_window(rng: random.Random, chain: list,
+                               after_t: int) -> None:
+    """Give one hop a revocation or expiry that lies AFTER `after_t`, so the
+    keyword appears in the trace while every action at or before `after_t`
+    stays authorized. Defeats 'REVOKED/expires appears => refuse' shortcuts."""
+    j = rng.randrange(len(chain))
+    d = chain[j]
+    later = after_t + rng.randrange(5, 30)
+    if rng.random() < 0.5:
+        chain[j] = Delegation(d.delegator, d.delegatee, d.scope,
+                              d.issued_at, expires_at=later,
+                              revoked_at=d.revoked_at)
+    else:
+        chain[j] = Delegation(d.delegator, d.delegatee, d.scope,
+                              d.issued_at, d.expires_at, revoked_at=later)
 
 
 def _pick_agents(rng: random.Random, n: int) -> list:
@@ -316,9 +363,13 @@ def gen_single_delegation(rng: random.Random):
     agents = _pick_agents(rng, 1)
     concrete, chain, budgets = _build_chain(rng, root.principal, agents, domain, ns)
     t = rng.randrange(1, 50)
+    note = ""
+    if rng.random() < 0.5:
+        _add_inert_validity_window(rng, chain, t)
+        note = "carries an inert validity window (after the action time)"
     act = Action(agents[-1], concrete, domain["leaf"](rng, ns),
                  _amount_for(rng, domain, budgets[-1]), t)
-    return root, chain, [(act, 1)], ""
+    return root, chain, [(act, 1)], note
 
 
 def gen_multi_hop(rng: random.Random):
@@ -328,9 +379,13 @@ def gen_multi_hop(rng: random.Random):
     agents = _pick_agents(rng, rng.randrange(2, 5))
     concrete, chain, budgets = _build_chain(rng, root.principal, agents, domain, ns)
     t = rng.randrange(1, 50)
+    note = ""
+    if rng.random() < 0.5:
+        _add_inert_validity_window(rng, chain, t)
+        note = "carries an inert validity window (after the action time)"
     act = Action(agents[-1], concrete, domain["leaf"](rng, ns),
                  _amount_for(rng, domain, budgets[-1]), t)
-    return root, chain, [(act, 1)], ""
+    return root, chain, [(act, 1)], note
 
 
 def gen_revocation(rng: random.Random):
@@ -353,7 +408,7 @@ def gen_revocation(rng: random.Random):
         (Action(agents[-1], concrete, res, amt, t_ok), 1),
         (Action(agents[-1], concrete, res, amt, t_bad), 0),
     ]
-    note = (f"hop {revoked_hop} revoked at t={revoked_at}; "
+    note = (f"chain index {revoked_hop} revoked at t={revoked_at}; "
             f"action retried at t={t_bad}")
     return root, chain, acts, note
 
@@ -378,7 +433,7 @@ def gen_expiry(rng: random.Random):
         (Action(agents[-1], concrete, res, amt, t_ok), 1),
         (Action(agents[-1], concrete, res, amt, t_bad), 0),
     ]
-    note = (f"hop {expiring_hop} expires at t={expires_at}; "
+    note = (f"chain index {expiring_hop} expires at t={expires_at}; "
             f"action attempted at t={t_bad}")
     return root, chain, acts, note
 
@@ -429,7 +484,8 @@ def gen_scope_escalation(rng: random.Random):
         (Action(agents[-1], concrete, res_in, amt, t), 0),
         (Action(agents[-1], concrete, res_out, amt, t + 1), 0),
     ]
-    note = (f"hop {esc_hop} widened the {dim} of its delegated scope beyond "
+    note = (f"chain index {esc_hop} widened the {dim} of its delegated scope "
+            f"beyond "
             f"what its delegator held")
     return root, chain, acts, note
 
@@ -512,6 +568,63 @@ def gen_attack_confused_deputy(rng: random.Random):
     return root, chain, acts, note
 
 
+STRUCTURE_VARIANTS = ("broken_link", "wrong_root", "wrong_agent", "pre_issue")
+
+
+def gen_chain_structure(rng: random.Random):
+    """Structural chain violations: the scope contents are innocuous, but the
+    chain's wiring or timing is wrong. These are the cases a shortcut that
+    only reads the final scope and the timestamps false-authorizes."""
+    domain = rng.choice(DOMAINS)
+    ns = rng.choice(domain["namespaces"])
+    root = _root(rng)
+    agents = _pick_agents(rng, rng.randrange(2, 4))
+    concrete, chain, budgets = _build_chain(rng, root.principal, agents, domain, ns)
+    variant = rng.choice(STRUCTURE_VARIANTS)
+    t = rng.randrange(1, 50)
+    amt = _amount_for(rng, domain, budgets[-1])
+    res1, res2 = domain["leaf"](rng, ns), domain["leaf"](rng, ns)
+    agent = agents[-1]
+
+    if variant == "broken_link":
+        j = rng.randrange(1, len(chain))
+        d = chain[j]
+        imposter = rng.choice([a for a in AGENT_NAMES if a not in agents])
+        chain[j] = Delegation(imposter, d.delegatee, d.scope,
+                              d.issued_at, d.expires_at, d.revoked_at)
+        acts = [(Action(agent, concrete, res1, amt, t), 0),
+                (Action(agent, concrete, res2, amt, t + 1), 0)]
+        note = (f"link broken at chain index {j}: delegator {imposter} was "
+                f"never a delegatee upstream")
+    elif variant == "wrong_root":
+        d = chain[0]
+        other = rng.choice([p for p in ROOT_PRINCIPALS if p != root.principal])
+        chain[0] = Delegation(other, d.delegatee, d.scope,
+                              d.issued_at, d.expires_at, d.revoked_at)
+        acts = [(Action(agent, concrete, res1, amt, t), 0),
+                (Action(agent, concrete, res2, amt, t + 1), 0)]
+        note = f"chain originates at {other}, not at the root {root.principal}"
+    elif variant == "wrong_agent":
+        imposter = rng.choice([a for a in AGENT_NAMES if a not in agents])
+        acts = [(Action(imposter, concrete, res1, amt, t), 0),
+                (Action(imposter, concrete, res2, amt, t + 1), 0)]
+        note = (f"{imposter} acts on a chain that was delegated to {agent}")
+    else:  # pre_issue
+        j = rng.randrange(len(chain))
+        k = rng.randrange(10, 30)
+        d = chain[j]
+        chain[j] = Delegation(d.delegator, d.delegatee, d.scope,
+                              issued_at=k, expires_at=d.expires_at,
+                              revoked_at=d.revoked_at)
+        t_ok = k + rng.randrange(0, 20)
+        t_bad = rng.randrange(1, k)
+        acts = [(Action(agent, concrete, res1, amt, t_ok), 1),
+                (Action(agent, concrete, res2, amt, t_bad), 0)]
+        note = (f"chain index {j} issued at t={k}; second action attempted "
+                f"earlier, at t={t_bad}")
+    return root, chain, acts, note
+
+
 GENERATORS: dict = {
     "single_delegation": gen_single_delegation,
     "multi_hop": gen_multi_hop,
@@ -521,6 +634,7 @@ GENERATORS: dict = {
     "resource_violation": gen_resource_violation,
     "budget_violation": gen_budget_violation,
     "attack_confused_deputy": gen_attack_confused_deputy,
+    "chain_structure": gen_chain_structure,
 }
 assert set(GENERATORS) == set(SCENARIO_CLASSES)
 
@@ -628,8 +742,13 @@ def write_datasheet(train: list, test: list, seed: int,
         "intended to be authorized or violating, then labels every action by "
         "calling `verify(...)`; the generator asserts its intent matches the "
         "verifier verdict, and the stored label/failing-hop/reason are the "
-        "verifier's. The 80/20 train/test split is stratified by class at "
-        "the trace level, so no trace appears in both splits.\n")
+        "verifier's. To blunt surface-cue shortcuts, roughly half of all "
+        "chains carry a decoy grant (a second, action-mismatched grant with "
+        "its own resource glob and spending cap in every scope), and roughly "
+        "half of the purely-authorized traces carry an inert revocation or "
+        "expiry timestamp lying after the action time. The 80/20 train/test "
+        "split is stratified by class at the trace level, so no trace "
+        "appears in both splits.\n")
     lines.append("## Scenario classes and distribution\n")
     lines.append("| class | traces (train/test) | actions | authorized | unauthorized |")
     lines.append("|---|---|---|---|---|")
@@ -656,7 +775,8 @@ def write_datasheet(train: list, test: list, seed: int,
         "spend, obligations, contextual policy — are out of scope, and any "
         "systematic blind spot of the verifier is inherited by the labels.")
     lines.append(
-        "- **Balanced by construction.** The 50/50 label balance eases "
+        "- **Balanced by construction.** The roughly 50/50 label balance "
+        "(exact ratio depends on chain_structure variant draws) eases "
         "evaluation but does not reflect a deployment distribution, where "
         "violations are typically rare.")
     lines.append(

@@ -12,7 +12,10 @@ models, and a training harness that uses the verifier as the reward signal.
 
 Everything runs on a CPU-only machine with no network access (the only
 exception: pointing the training harness at a real Hugging Face model
-downloads its weights).
+downloads its weights). Install dependencies with
+`pip install -r requirements.txt` — components 1–2 need only the standard
+library (+ numpy); component 3 imports `torch` and `transformers` even for
+its offline smoke test.
 
 ## The four components
 
@@ -42,26 +45,34 @@ vs. verifier labels           test by default, scales to a GPU model
   verdict to 1/0. **This module is ground truth everywhere; nothing in the
   repo hand-labels.**
 - **`trace_benchmark.py`** — seeded generator over 5 domains (email,
-  payment, repo, file, db) and 8 scenario classes: `single_delegation`,
+  payment, repo, file, db) and 9 scenario classes: `single_delegation`,
   `multi_hop`, `revocation`, `expiry`, `scope_escalation`,
-  `resource_violation`, `budget_violation`, `attack_confused_deputy`.
-  Corpus is 50/50 authorized/unauthorized by construction and split 80/20
-  train/test at the trace level (class-stratified, no leakage). Schema and
-  limitations are documented in the generated `DATASHEET.md`.
+  `resource_violation`, `budget_violation`, `attack_confused_deputy`,
+  `chain_structure` (broken links, wrong root, wrong acting agent,
+  pre-issue actions). Decoy grants and inert revocation/expiry timestamps
+  are mixed in so surface-cue shortcuts misfire. Corpus is ~50/50
+  authorized/unauthorized and split 80/20 train/test at the trace level
+  (class-stratified, no leakage). Schema and limitations are documented in
+  the generated `DATASHEET.md`.
 - **`eval_harness.py`** — renders each test action and its delegation
   chain as a natural-language prompt, asks a backend for
   AUTHORIZED/UNAUTHORIZED, and scores it against the verifier label.
   Backends are any `answer(prompt) -> str` callable; built-ins (no
-  network): `always_authorized`, `random`, and a verifier-backed `oracle`
-  upper bound. Headline metric: **false-authorize rate on the
-  attack/violation classes** — the dangerous error.
+  network): `always_authorized`, `random`, a deliberately shallow
+  `heuristic` keyword/number shortcut (the pattern-matching floor a real
+  model must beat), and a verifier-backed `oracle` upper bound. Headline
+  metric: **false-authorize rate on the attack/violation classes** — the
+  dangerous error.
 - **`train_verifier_reward.py`** — trains a causal LM to decide
   AUTHORIZE/REFUSE with the verifier verdict as reward (+1 correct
   authorize/refuse, −1 false-authorize or false-refuse) via REINFORCE
   with a running baseline. `--model tiny` (default) is an offline
   random-weight byte-level GPT-2: the CPU smoke test. Any HF causal LM
-  name scales it up on a GPU. Logs mean reward and held-out violation
-  rate vs. cumulative training examples to `training_log.jsonl`.
+  name scales it up on a GPU. Logs mean reward and, on a seeded shuffled
+  held-out subset, accuracy + violation rate + false-refuse rate vs.
+  cumulative training examples to `training_log.jsonl`. Read violation
+  rate and false-refuse rate together: a policy that collapses to
+  always-refuse zeroes the former while the latter goes to 1.
 
 ## Run everything (acceptance order)
 

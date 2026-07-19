@@ -224,6 +224,45 @@ def test_empty_chain_traces():
     assert m["accuracy"] == 1.0 and m["false_authorize_rate"] == 0.0
 
 
+# --- heuristic backend: a real floor, but beatable by design ---------------
+
+def test_heuristic_backend():
+    m = run_eval(make_backends(TEST, seed=0)["heuristic"], TEST)["metrics"]
+    assert m["parse_failure_rate"] == 0.0
+    # better than chance...
+    assert m["accuracy"] > 0.6
+    # ...but the shortcut must NOT solve the benchmark: chain wiring and
+    # attenuation are invisible to it
+    assert m["accuracy"] < 0.95
+    assert m["per_class"]["chain_structure"]["false_authorize_rate"] > 0.5
+    assert m["headline_false_authorize_rate_on_violation_classes"] > 0.1
+
+
+# --- backend faults are contained, never void the run ----------------------
+
+def test_run_eval_robust_to_backend_faults():
+    calls = {"n": 0}
+
+    def flaky(prompt):
+        calls["n"] += 1
+        if calls["n"] % 3 == 0:
+            raise TimeoutError("simulated rate limit")
+        return "AUTHORIZED"
+
+    out = run_eval(flaky, TEST[:6])
+    n = sum(len(tr["actions"]) for tr in TEST[:6])
+    assert len(out["records"]) == n, "faulting backend lost records"
+    errs = [r for r in out["records"] if r["error"]]
+    assert errs and all(r["prediction"] is None for r in errs)
+    assert all("TimeoutError" in r["error"] for r in errs)
+
+    def garbage(prompt):
+        return {"role": "assistant", "content": "AUTHORIZED"}  # non-str reply
+
+    out = run_eval(garbage, TEST[:2])
+    assert all(r["prediction"] in (0, 1, None) for r in out["records"])
+
+
 # --- degenerate record sets never crash the metrics ------------------------
 
 def test_metrics_degenerate_inputs():

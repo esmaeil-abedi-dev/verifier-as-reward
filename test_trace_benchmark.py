@@ -166,6 +166,9 @@ def test_class_label_shapes():
             assert all(l == 1 for l in labels), f"{tr['trace_id']}"
         elif cls == "scope_escalation":
             assert all(l == 0 for l in labels), f"{tr['trace_id']}"
+        elif cls == "chain_structure":
+            # wiring variants are all-unauthorized; pre_issue has a control
+            assert 0 in labels, f"{tr['trace_id']}"
         else:
             assert 0 in labels and 1 in labels, f"{tr['trace_id']}"
 
@@ -213,11 +216,55 @@ def test_tiny_corpus_rejected():
 # --- scope escalations are diverse (not one canonical widening) ------------
 
 def test_escalation_diversity():
+    # across a few seeds, all three escalation dimensions must appear
     dims = set()
+    for s in range(5):
+        for tr in [t for split in generate_corpus(seed=s, traces_per_class=8)
+                   for t in split]:
+            if tr["scenario_class"] == "scope_escalation":
+                dims.add(tr["note"].split("widened the ")[1].split()[0])
+    assert dims == {"action", "resource", "budget"}, f"dims seen: {dims}"
+
+
+# --- distractors actually occur (decoy grants, inert windows) ---------------
+
+def test_distractors_present():
+    n_decoy = sum(
+        1 for tr in ALL
+        if any(len(d["scope"]["grants"]) > 1 for d in tr["delegations"]))
+    assert n_decoy > 0.25 * len(ALL), "decoy grants nearly absent"
+    inert_ok = 0
     for tr in ALL:
-        if tr["scenario_class"] == "scope_escalation":
-            dims.add(tr["note"].split("widened the ")[1].split()[0])
-    assert len(dims) >= 2, f"only escalation dims {dims} in the corpus"
+        if tr["scenario_class"] not in ("single_delegation", "multi_hop"):
+            continue
+        t_max = max(a["t"] for a in tr["actions"])
+        for d in tr["delegations"]:
+            windows = [w for w in (d["revoked_at"], d["expires_at"])
+                       if w is not None]
+            if windows and all(a["label"] == 1 for a in tr["actions"]):
+                assert all(w > t_max for w in windows), \
+                    f"{tr['trace_id']}: non-inert window on authorized trace"
+                inert_ok += 1
+    assert inert_ok > 0, "no inert validity windows in authorized traces"
+
+
+# --- chain_structure exercises the verifier's structural checks -------------
+
+def test_chain_structure_reasons():
+    reasons = set()
+    for tr in ALL:
+        if tr["scenario_class"] == "chain_structure":
+            for a in tr["actions"]:
+                if a["label"] == 0:
+                    reasons.add(a["reason"].split("(")[0].strip())
+    expected = {
+        "broken chain: delegatee/delegator mismatch",
+        "chain does not end at the acting agent",
+    }
+    assert expected <= reasons, f"missing structural reasons; got {reasons}"
+    assert any(r.startswith("chain does not originate at root")
+               for r in reasons), reasons
+    assert any(r.startswith("hop not yet issued") for r in reasons), reasons
 
 
 # --- confused-deputy invariant is structural, not vacuous ------------------
