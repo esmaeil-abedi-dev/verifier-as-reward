@@ -11,8 +11,11 @@ with the deterministic verifier's verdict (`label_action`) as the reward:
              -1  if it false-authorizes or false-refuses
 
 The policy scores two candidate continuations (" AUTHORIZE" / " REFUSE") of a
-compact trace prompt, samples a decision from the softmax over their sequence
-log-probabilities, and is updated by REINFORCE with a running-mean baseline.
+compact trace prompt by their length-normalized (mean per-token) sequence
+log-probability — normalization keeps the unequal candidate lengths from
+biasing the initial policy to one decision — samples a decision from the
+softmax over the two scores, and is updated by REINFORCE with a running-mean
+baseline.
 The loop is modular: `load_examples`, `reward_for_decision`, and
 `candidate_logprobs` are exactly the pieces a TRL/PPO trainer would reuse —
 swap the update rule without touching the reward path.
@@ -84,8 +87,6 @@ def build_model_and_tokenizer(name: str, seed: int):
     model = AutoModelForCausalLM.from_pretrained(name)
 
     class _HFWrapper:
-        vocab_size = tok.vocab_size
-
         def encode(self, text: str) -> list:
             return tok.encode(text, add_special_tokens=False)
 
@@ -160,8 +161,11 @@ def reward_for_decision(decision: int, example: dict) -> float:
 
 def candidate_logprobs(model, tokenizer, prompt: str,
                        device: torch.device) -> torch.Tensor:
-    """Sequence log-probability of each decision continuation given the
-    prompt. Returns a tensor of shape (2,) with gradients attached."""
+    """Length-normalized (mean per-token) log-probability of each decision
+    continuation given the prompt. Normalization matters: the candidates
+    tokenize to different lengths, and raw sequence log-probs would bias an
+    untrained policy almost entirely toward the shorter one. Returns a
+    tensor of shape (2,) with gradients attached."""
     prompt_ids = tokenizer.encode(prompt)
     lps = []
     for cand in DECISIONS:
@@ -171,7 +175,7 @@ def candidate_logprobs(model, tokenizer, prompt: str,
         logprobs = torch.log_softmax(logits.float(), dim=-1)
         start = len(prompt_ids) - 1
         lp = sum(logprobs[start + j, cand_ids[j]] for j in range(len(cand_ids)))
-        lps.append(lp)
+        lps.append(lp / len(cand_ids))
     return torch.stack(lps)
 
 
@@ -179,6 +183,9 @@ def candidate_logprobs(model, tokenizer, prompt: str,
 def evaluate(model, tokenizer, examples: list, device: torch.device) -> dict:
     """Greedy-decision metrics on held-out examples. The violation rate is
     the false-authorize rate on actions the verifier rejects."""
+    if not examples:
+        return {"n_eval_actions": 0, "accuracy": None,
+                "heldout_violation_rate": None}
     model.eval()
     n_correct = 0
     n_viol = 0
@@ -235,10 +242,11 @@ def train(args) -> list:
         history.append(point)
         log_f.write(json.dumps(point) + "\n")
         log_f.flush()
-        viol = point["heldout_violation_rate"]
+        def fmt(x):
+            return "n/a" if x is None else f"{x:.3f}"
         print(f"step {step:>4}  reward {str(mean_reward):>6}  "
-              f"heldout acc {point['accuracy']:.3f}  "
-              f"violation rate {viol if viol is None else f'{viol:.3f}'}")
+              f"heldout acc {fmt(point['accuracy'])}  "
+              f"violation rate {fmt(point['heldout_violation_rate'])}")
 
     log_point(0, None, None)  # untrained baseline point of the curve
     for step in range(1, args.steps + 1):

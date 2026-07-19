@@ -165,6 +165,65 @@ def test_smoke_run_writes_log():
         assert 0.0 <= point["heldout_violation_rate"] <= 1.0
 
 
+# --- scores match an independent reference computation ---------------------
+
+def test_candidate_logprobs_numerical_reference():
+    # Guards the teacher-forcing offset (start = len(prompt_ids) - 1): an
+    # off-by-one would corrupt reward and eval while every shape test passes.
+    model, tok = build_model_and_tokenizer("tiny", seed=0)
+    model.eval()  # disable dropout so both computations see the same network
+    prompt = "ROOT user:alice [email.*|*|inf]\nDECISION:"
+    got = candidate_logprobs(model, tok, prompt, DEVICE).detach()
+    prompt_ids = tok.encode(prompt)
+    for k, cand in enumerate(DECISIONS):
+        cand_ids = tok.encode(cand)
+        ids = prompt_ids + cand_ids
+        with torch.no_grad():
+            logits = model(input_ids=torch.tensor([ids])).logits[0]
+        logprobs = torch.log_softmax(logits.float(), dim=-1)
+        ref = sum(logprobs[i - 1, ids[i]]
+                  for i in range(len(prompt_ids), len(ids))) / len(cand_ids)
+        assert torch.allclose(got[k], ref, atol=1e-5), \
+            f"{cand}: {float(got[k])} != reference {float(ref)}"
+
+
+# --- untrained policy is not length-biased to one decision -----------------
+
+def test_initial_policy_not_degenerate():
+    # Without length normalization the shorter candidate wins with
+    # P ~ 1 - 5e-8 and the smoke run learns nothing; pin against regression.
+    model, tok = build_model_and_tokenizer("tiny", seed=0)
+    exs = load_examples(TEST_PATH)[:5]
+    for ex in exs:
+        lps = candidate_logprobs(model, tok, ex["prompt"], DEVICE).detach()
+        probs = torch.softmax(lps, dim=0)
+        assert probs.min() > 0.01, \
+            f"untrained policy degenerate: P = {probs.tolist()}"
+
+
+# --- compact prompts stay well inside the tiny model's context -------------
+
+def test_compact_prompt_length_budget():
+    train, test = generate_corpus(seed=7, traces_per_class=25)
+    tok = ByteTokenizer()
+    limit = 768  # soft bound below n_positions=1024 for early warning
+    for tr in train + test:
+        for aj in tr["actions"]:
+            for cand in DECISIONS:
+                n = len(tok.encode(compact_prompt(tr, aj) + cand))
+                assert n <= limit, \
+                    f"{tr['trace_id']}: {n} tokens exceeds soft limit {limit}"
+
+
+# --- empty eval set returns clean None metrics, not a crash ----------------
+
+def test_evaluate_empty():
+    model, tok = build_model_and_tokenizer("tiny", seed=0)
+    m = evaluate(model, tok, [], DEVICE)
+    assert m == {"n_eval_actions": 0, "accuracy": None,
+                 "heldout_violation_rate": None}
+
+
 # --- same seed reproduces the same training trajectory ---------------------
 
 def test_training_determinism():

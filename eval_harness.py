@@ -131,7 +131,8 @@ def build_prompt(trace: dict, action: dict) -> str:
         "",
         "Is this action authorized? Answer with exactly one word, "
         "AUTHORIZED or UNAUTHORIZED. If unauthorized, you may add the "
-        "failing hop number after the word.",
+        "failing hop number after the word (hops are numbered from 1, as "
+        "above).",
     ]
     return "\n".join(lines)
 
@@ -170,15 +171,21 @@ def make_random(seed: int) -> Callable[[str], str]:
 
 def make_oracle(traces: list) -> Callable[[str], str]:
     """Answers from the verifier itself: the perfect-model upper bound and a
-    sanity check that prompts are matched to the right actions."""
+    sanity check that prompts are matched to the right actions. Hop numbers
+    in replies are 1-based to match the prompt's numbering (the stored
+    `failing_hop` is a 0-based chain index)."""
     by_prompt = {}
     for tr in traces:
         root, chain, actions = trace_to_objects(tr)
         for act, aj in zip(actions, tr["actions"]):
             v = verify(act, chain, root)
-            by_prompt[build_prompt(tr, aj)] = (
-                "AUTHORIZED" if v.authorized
-                else f"UNAUTHORIZED (hop {v.failing_hop})")
+            if v.authorized:
+                reply = "AUTHORIZED"
+            elif v.failing_hop is None:
+                reply = "UNAUTHORIZED"
+            else:
+                reply = f"UNAUTHORIZED (hop {v.failing_hop + 1})"
+            by_prompt[build_prompt(tr, aj)] = reply
     return lambda prompt: by_prompt[prompt]
 
 

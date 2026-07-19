@@ -24,8 +24,9 @@ A *trace* is a JSON object:
     ACTION     = {"agent": str, "action": str, "resource": str,
                   "amount": float, "t": int,
                   "label": 0 | 1,                  # verifier verdict
-                  "failing_hop": int | null,       # only when label == 0
-                  "reason": str}                   # only when label == 0
+                  "failing_hop": int | null,       # 0-based chain index;
+                                                   #   null when label == 1
+                  "reason": str}                   # "" when label == 1
 
 Every label is produced by calling authority_verifier.verify(...) — the
 verifier is ground truth; nothing is hand-labeled. The generator merely
@@ -244,11 +245,13 @@ def _budget_ladder(rng: random.Random, n: int, budgeted: bool) -> list:
     return ladder
 
 
-def _scope_ladder(rng: random.Random, domain: dict, ns: str, n_hops: int):
+def _scope_ladder(rng: random.Random, domain: dict, ns: str, n_hops: int,
+                  start: int = 0):
     """(action_pattern, resource) pairs, each attenuating the previous.
 
     The full ladder is pattern/* -> pattern/top -> concrete/mid ->
-    concrete/mid; the first n_hops entries are used.
+    concrete/mid; entries [start : start + n_hops] are used (start > 0 for
+    chains whose root holds less than universal authority).
     """
     concrete = rng.choice(domain["actions"])
     mid = domain["mid"](ns)
@@ -258,14 +261,16 @@ def _scope_ladder(rng: random.Random, domain: dict, ns: str, n_hops: int):
         (concrete, mid),
         (concrete, mid),
     ]
-    return concrete, full[:n_hops]
+    assert start + n_hops <= len(full)
+    return concrete, full[start:start + n_hops]
 
 
 def _build_chain(rng: random.Random, root_principal: str, agents: list,
-                 domain: dict, ns: str, issued_at: int = 0):
+                 domain: dict, ns: str, issued_at: int = 0,
+                 ladder_start: int = 0):
     """A structurally valid, monotonically narrowing chain of len(agents) hops."""
     n = len(agents)
-    concrete, ladder = _scope_ladder(rng, domain, ns, n)
+    concrete, ladder = _scope_ladder(rng, domain, ns, n, ladder_start)
     budgets = _budget_ladder(rng, n, domain["budgeted"])
     chain = []
     delegators = [root_principal] + agents[:-1]
@@ -384,13 +389,34 @@ def gen_scope_escalation(rng: random.Random):
     root = _root(rng)
     agents = _pick_agents(rng, rng.randrange(2, 5))
     concrete, chain, budgets = _build_chain(rng, root.principal, agents, domain, ns)
-    # Widen one hop (past hop 0 — hop 0's parent is the all-powerful root, so
-    # nothing widens past it) to full authority: never subsumed by its
-    # parent's domain-restricted ladder scope.
+    # Widen exactly one dimension (action, resource, or budget) of one hop
+    # past hop 0 (hop 0's parent is the all-powerful root, so nothing widens
+    # past it) beyond what its delegator holds.
     esc_hop = rng.randrange(1, len(chain))
+    parent_grant = chain[esc_hop - 1].scope.grants[0]
+    child_grant = chain[esc_hop].scope.grants[0]
+    dims = ["action"]
+    if parent_grant.resource != "*":
+        dims.append("resource")
+    if not math.isinf(parent_grant.max_budget):
+        dims.append("budget")
+    dim = rng.choice(dims)
+    if dim == "action":
+        # one level broader than the parent's action pattern
+        wider_action = "*" if parent_grant.action.endswith(".*") \
+            else domain["pattern"]
+        escalated = Grant(wider_action, child_grant.resource,
+                          child_grant.max_budget)
+    elif dim == "resource":
+        escalated = Grant(child_grant.action, "*", child_grant.max_budget)
+    else:  # budget
+        escalated = Grant(child_grant.action, child_grant.resource,
+                          round(parent_grant.max_budget * rng.uniform(1.5, 3.0), 2))
+    assert not parent_grant.subsumes(escalated), \
+        f"escalation on {dim} failed to widen past the parent grant"
     d = chain[esc_hop]
-    widened = Scope(grants=(Grant("*", "*", math.inf),))
-    chain[esc_hop] = Delegation(d.delegator, d.delegatee, widened,
+    chain[esc_hop] = Delegation(d.delegator, d.delegatee,
+                                Scope(grants=(escalated,)),
                                 d.issued_at, d.expires_at, d.revoked_at)
     t = rng.randrange(1, 50)
     res_in = domain["leaf"](rng, ns)
@@ -403,8 +429,8 @@ def gen_scope_escalation(rng: random.Random):
         (Action(agents[-1], concrete, res_in, amt, t), 0),
         (Action(agents[-1], concrete, res_out, amt, t + 1), 0),
     ]
-    note = (f"hop {esc_hop} widened its delegated scope to full authority "
-            f"('*' on '*'), beyond what its delegator held")
+    note = (f"hop {esc_hop} widened the {dim} of its delegated scope beyond "
+            f"what its delegator held")
     return root, chain, acts, note
 
 
@@ -446,13 +472,26 @@ def gen_budget_violation(rng: random.Random):
     return root, chain, acts, note
 
 
+ATTACKERS = ["user:mallory", "user:eve", "ext:partner-api", "ext:webform-bot"]
+
+
 def gen_attack_confused_deputy(rng: random.Random):
+    """Unlike resource_violation (universal root, agent just strays), the
+    deputy chain hangs off a root that holds exactly the domain-wide
+    authority the attacker wants: the root COULD authorize the victim
+    resource, the deputy's attenuated chain provably cannot, and a named
+    third party asks the deputy to bridge that gap."""
     domain = rng.choice(DOMAINS)
     ns = rng.choice(domain["namespaces"])
-    root = _root(rng)
-    # >= 2 hops; the deputy's final scope is confined to one namespace.
-    agents = _pick_agents(rng, rng.randrange(3, 5))
-    concrete, chain, budgets = _build_chain(rng, root.principal, agents, domain, ns)
+    # Root holds the whole domain (not universal authority) …
+    root = RootAuthority(
+        principal=rng.choice(ROOT_PRINCIPALS),
+        scope=Scope(grants=(Grant(domain["pattern"], domain["top"], math.inf),)),
+    )
+    # … and the chain starts one ladder level down, confined to one namespace.
+    agents = _pick_agents(rng, rng.randrange(2, 4))
+    concrete, chain, budgets = _build_chain(rng, root.principal, agents,
+                                            domain, ns, ladder_start=1)
     t = rng.randrange(1, 50)
     victim_ns = rng.choice([n for n in domain["namespaces"] if n != ns])
     victim_res = domain["leaf"](rng, victim_ns)
@@ -462,12 +501,14 @@ def gen_attack_confused_deputy(rng: random.Random):
     # is exactly the attack.
     assert root.scope.permits(concrete, victim_res, amt), \
         "confused-deputy setup requires root authority over the victim resource"
+    attacker = rng.choice(ATTACKERS)
     acts = [
         (Action(agents[-1], concrete, domain["leaf"](rng, ns), amt, t), 1),
         (Action(agents[-1], concrete, victim_res, amt, t + 1), 0),
     ]
-    note = (f"a third party asks the agent to apply its '{ns}' authority to "
-            f"'{victim_res}' (held by the root, never delegated to the agent)")
+    note = (f"{attacker} asks the agent to apply its '{ns}' authority to "
+            f"'{victim_res}' — inside the root's '{domain['top']}' grant but "
+            f"never delegated down the chain")
     return root, chain, acts, note
 
 
@@ -518,7 +559,11 @@ def make_trace(rng: random.Random, scenario_class: str, index: int) -> dict:
 
 
 def generate_corpus(seed: int = 7, traces_per_class: int = 25):
-    """Return (train_traces, test_traces), stratified 80/20 by class."""
+    """Return (train_traces, test_traces), stratified 80/20 by class. Needs
+    at least 2 traces per class so every class lands in both splits."""
+    if traces_per_class < 2:
+        raise ValueError("traces_per_class must be >= 2 so every class "
+                         "appears in both train and test")
     rng = random.Random(seed)
     train, test = [], []
     for cls in SCENARIO_CLASSES:
@@ -616,8 +661,10 @@ def write_datasheet(train: list, test: list, seed: int,
         "violations are typically rare.")
     lines.append(
         "- **Attack realism.** `attack_confused_deputy` encodes the "
-        "structural signature of a confused deputy (root holds the authority, "
-        "the deputy's chain does not) rather than a naturalistic social-"
+        "structural signature of a confused deputy — the root's domain-wide "
+        "grant provably covers the victim resource while the deputy's "
+        "attenuated chain does not, with the requesting third party named "
+        "only in the free-text `note` — rather than a naturalistic social-"
         "engineering transcript.")
     lines.append("")
     with open(path, "w") as f:

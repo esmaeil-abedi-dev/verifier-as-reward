@@ -11,17 +11,32 @@ calibration properties of each baseline backend on a freshly generated
 corpus, and prompt content. No network access anywhere.
 """
 
+import json
 import math
+import os
+import subprocess
+import sys
+import tempfile
 
+from authority_verifier import verify
 from eval_harness import (
     VIOLATION_CLASSES,
+    _fmt_num,
     build_prompt,
     compute_metrics,
     make_backends,
+    make_oracle,
     parse_answer,
     run_eval,
 )
-from trace_benchmark import SCENARIO_CLASSES, generate_corpus
+from trace_benchmark import (
+    SCENARIO_CLASSES,
+    generate_corpus,
+    trace_to_objects,
+    write_jsonl,
+)
+
+REPO = os.path.dirname(os.path.abspath(__file__))
 
 _failures = []
 
@@ -138,6 +153,110 @@ def test_prompt_content():
             # the label itself must never leak into the prompt
             assert "label" not in p.lower()
             assert "verifier" not in p.lower()
+
+
+# --- prompts carry ALL decision-relevant information -----------------------
+
+def test_prompt_information_completeness():
+    prompts = []
+    for tr in TEST:
+        scopes = [tr["root"]["scope"]] + [d["scope"] for d in tr["delegations"]]
+        for aj in tr["actions"]:
+            p = build_prompt(tr, aj)
+            prompts.append(p)
+            # budget caps, expiries, and amounts must be verbalized, or
+            # budget_violation / expiry prompts are unanswerable in principle
+            for scope in scopes:
+                for g in scope["grants"]:
+                    if g["max_budget"] is not None:
+                        assert f"spending cap of {_fmt_num(g['max_budget'])}" in p
+            for d in tr["delegations"]:
+                if d["expires_at"] is not None:
+                    assert f"expires at t={_fmt_num(d['expires_at'])}" in p
+            if aj["amount"]:
+                assert f"amount {_fmt_num(aj['amount'])}" in p
+    # distinct actions must never collapse onto one prompt (the oracle is
+    # keyed by prompt text)
+    assert len(set(prompts)) == len(prompts)
+
+
+# --- oracle hop numbering matches the prompt's 1-based numbering -----------
+
+def test_oracle_hop_numbering():
+    oracle = make_oracle(TEST)
+    checked = 0
+    for tr in TEST:
+        for aj in tr["actions"]:
+            if aj["label"] == 0 and aj["failing_hop"] is not None:
+                reply = oracle(build_prompt(tr, aj))
+                assert f"(hop {aj['failing_hop'] + 1})" in reply, \
+                    f"{tr['trace_id']}: {reply!r} vs 0-based {aj['failing_hop']}"
+                checked += 1
+    assert checked > 0
+
+
+# --- empty-chain traces (root acting directly) flow through the harness ----
+
+def test_empty_chain_traces():
+    def mk(agent):
+        tr = {
+            "trace_id": f"manual-{agent}", "scenario_class": "single_delegation",
+            "note": "", "root": {"principal": "user:alice", "scope": {"grants": [
+                {"action": "email.*", "resource": "*", "max_budget": None}]}},
+            "delegations": [],
+            "actions": [{"agent": agent, "action": "email.send",
+                         "resource": "inbox:alice/msg-1", "amount": 0.0, "t": 1,
+                         "label": None, "failing_hop": None, "reason": ""}],
+        }
+        root, chain, (act,) = trace_to_objects(tr)
+        v = verify(act, chain, root)  # labels always come from the verifier
+        tr["actions"][0].update(
+            label=1 if v.authorized else 0,
+            failing_hop=v.failing_hop, reason=v.reason)
+        return tr
+
+    traces = [mk("user:alice"), mk("agent:rogue")]
+    labels = [tr["actions"][0]["label"] for tr in traces]
+    assert labels == [1, 0], "root acts freely; a stranger with no chain cannot"
+    p = build_prompt(traces[0], traces[0]["actions"][0])
+    assert "(none — the actor holds authority directly)" in p
+    m = run_eval(make_oracle(traces), traces)["metrics"]
+    assert m["accuracy"] == 1.0 and m["false_authorize_rate"] == 0.0
+
+
+# --- degenerate record sets never crash the metrics ------------------------
+
+def test_metrics_degenerate_inputs():
+    m = compute_metrics([])
+    assert m["n_actions"] == 0 and m["accuracy"] is None
+    assert m["headline_false_authorize_rate_on_violation_classes"] is None
+    all_unparseable = [{"label": l, "prediction": None,
+                        "scenario_class": "expiry"} for l in (0, 1)]
+    m = compute_metrics(all_unparseable)
+    assert m["accuracy"] == 0.0 and m["parse_failure_rate"] == 1.0
+    assert m["false_authorize_rate"] == 0.0  # None is never an authorization
+
+
+# --- documented CLI entry point works, bad backend fails loudly ------------
+
+def test_cli():
+    env = {**os.environ, "PYTHONPATH": REPO}
+    with tempfile.TemporaryDirectory() as d:
+        tf = os.path.join(d, "test.jsonl")
+        out = os.path.join(d, "results.json")
+        write_jsonl(TEST[:5], tf)
+        r = subprocess.run(
+            [sys.executable, os.path.join(REPO, "eval_harness.py"),
+             "--test-file", tf, "--backends", "oracle", "--out", out],
+            capture_output=True, text=True, env=env)
+        assert r.returncode == 0, r.stderr
+        results = json.load(open(out))
+        assert results["backends"]["oracle"]["metrics"]["accuracy"] == 1.0
+        r = subprocess.run(
+            [sys.executable, os.path.join(REPO, "eval_harness.py"),
+             "--test-file", tf, "--backends", "no_such_backend"],
+            capture_output=True, text=True, env=env)
+        assert r.returncode != 0
 
 
 if __name__ == "__main__":

@@ -14,11 +14,16 @@ seed determinism, and serialization round-tripping.
 import json
 import math
 import os
+import subprocess
+import sys
 import tempfile
 
 from authority_verifier import verify
 from trace_benchmark import (
+    DATASHEET_FILE,
     SCENARIO_CLASSES,
+    TEST_FILE,
+    TRAIN_FILE,
     delegation_from_json,
     delegation_to_json,
     generate_corpus,
@@ -26,8 +31,11 @@ from trace_benchmark import (
     scope_from_json,
     scope_to_json,
     trace_to_objects,
+    write_datasheet,
     write_jsonl,
 )
+
+REPO = os.path.dirname(os.path.abspath(__file__))
 
 SEED = 7
 TRACES_PER_CLASS = 25
@@ -160,6 +168,88 @@ def test_class_label_shapes():
             assert all(l == 0 for l in labels), f"{tr['trace_id']}"
         else:
             assert 0 in labels and 1 in labels, f"{tr['trace_id']}"
+
+
+# --- committed artifacts match regeneration (no silent drift) --------------
+
+def test_committed_artifacts_match_regeneration():
+    with tempfile.TemporaryDirectory() as d:
+        write_jsonl(TRAIN, os.path.join(d, TRAIN_FILE))
+        write_jsonl(TEST, os.path.join(d, TEST_FILE))
+        write_datasheet(TRAIN, TEST, SEED, TRACES_PER_CLASS,
+                        os.path.join(d, DATASHEET_FILE))
+        for name in (TRAIN_FILE, TEST_FILE, DATASHEET_FILE):
+            committed = os.path.join(REPO, name)
+            assert os.path.exists(committed), \
+                f"{name} missing — run trace_benchmark.py first"
+            assert (open(committed, "rb").read()
+                    == open(os.path.join(d, name), "rb").read()), \
+                f"committed {name} does not match regeneration with " \
+                f"seed={SEED}, traces_per_class={TRACES_PER_CLASS}"
+
+
+# --- generator intent asserts hold across many seeds -----------------------
+
+def test_many_seed_robustness():
+    # make_trace asserts generator intent == verifier verdict on every
+    # action; boundary draws (t == revoked_at etc.) vary by seed, so sweep.
+    for s in range(30):
+        generate_corpus(seed=s, traces_per_class=5)
+
+
+# --- too-small corpus is rejected, not silently degenerate -----------------
+
+def test_tiny_corpus_rejected():
+    try:
+        generate_corpus(seed=1, traces_per_class=1)
+        assert False, "traces_per_class=1 should raise"
+    except ValueError:
+        pass
+    train2, test2 = generate_corpus(seed=1, traces_per_class=2)
+    for split in (train2, test2):
+        assert {tr["scenario_class"] for tr in split} == set(SCENARIO_CLASSES)
+
+
+# --- scope escalations are diverse (not one canonical widening) ------------
+
+def test_escalation_diversity():
+    dims = set()
+    for tr in ALL:
+        if tr["scenario_class"] == "scope_escalation":
+            dims.add(tr["note"].split("widened the ")[1].split()[0])
+    assert len(dims) >= 2, f"only escalation dims {dims} in the corpus"
+
+
+# --- confused-deputy invariant is structural, not vacuous ------------------
+
+def test_confused_deputy_invariant():
+    for tr in ALL:
+        if tr["scenario_class"] != "attack_confused_deputy":
+            continue
+        root, chain, actions = trace_to_objects(tr)
+        grants = root.scope.grants
+        assert not any(g.action == "*" and g.resource == "*" for g in grants), \
+            f"{tr['trace_id']}: deputy root must not hold universal authority"
+        for act, aj in zip(actions, tr["actions"]):
+            if aj["label"] == 0:
+                # the root could authorize what the deputy's chain cannot
+                assert root.scope.permits(act.action, act.resource, act.amount), \
+                    f"{tr['trace_id']}: root cannot cover the victim resource"
+
+
+# --- documented CLI entry point works ---------------------------------------
+
+def test_cli():
+    with tempfile.TemporaryDirectory() as d:
+        env = {**os.environ, "PYTHONPATH": REPO}
+        r = subprocess.run(
+            [sys.executable, os.path.join(REPO, "trace_benchmark.py"),
+             "--seed", "3", "--traces-per-class", "2", "--outdir", d],
+            capture_output=True, text=True, env=env)
+        assert r.returncode == 0, r.stderr
+        for name in (TRAIN_FILE, TEST_FILE, DATASHEET_FILE):
+            assert os.path.exists(os.path.join(d, name)), name
+        assert load_traces(os.path.join(d, TRAIN_FILE))
 
 
 if __name__ == "__main__":
