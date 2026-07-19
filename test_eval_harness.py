@@ -18,14 +18,21 @@ import subprocess
 import sys
 import tempfile
 
+import urllib.error
+
+import eval_harness
 from authority_verifier import verify
 from eval_harness import (
+    DEFAULT_MODEL_LADDER,
     VIOLATION_CLASSES,
     _fmt_num,
     build_prompt,
     compute_metrics,
+    load_dotenv,
     make_backends,
+    make_openrouter_backend,
     make_oracle,
+    model_ladder,
     parse_answer,
     run_eval,
 )
@@ -274,6 +281,170 @@ def test_metrics_degenerate_inputs():
     m = compute_metrics(all_unparseable)
     assert m["accuracy"] == 0.0 and m["parse_failure_rate"] == 1.0
     assert m["false_authorize_rate"] == 0.0  # None is never an authorization
+
+
+# --- OpenRouter backend (fully mocked — no network in tests) ---------------
+
+class _MockTransport:
+    """Replaces eval_harness._post_json; scripted responses/exceptions."""
+
+    def __init__(self, script):
+        self.script = list(script)
+        self.calls = []
+
+    def __call__(self, url, payload, api_key, timeout):
+        self.calls.append({"url": url, "payload": payload,
+                           "api_key": api_key, "timeout": timeout})
+        item = self.script.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+
+def _reply(text):
+    return {"choices": [{"message": {"content": text}}]}
+
+
+def _http_error(code):
+    return urllib.error.HTTPError("url", code, "err", None, None)
+
+
+def _with_transport(script, fn, **backend_kw):
+    transport = _MockTransport(script)
+    orig_post, orig_sleep = eval_harness._post_json, eval_harness.time.sleep
+    eval_harness._post_json = transport
+    eval_harness.time.sleep = lambda s: None  # no real backoff in tests
+    try:
+        backend = make_openrouter_backend(
+            "test/model-1", api_key="sk-test", **backend_kw)
+        return fn(backend), transport
+    finally:
+        eval_harness._post_json = orig_post
+        eval_harness.time.sleep = orig_sleep
+
+
+def test_openrouter_request_shape():
+    out, transport = _with_transport(
+        [_reply("AUTHORIZED")], lambda b: b("some prompt"), timeout=42.0)
+    assert out == "AUTHORIZED"
+    call = transport.calls[0]
+    assert call["url"] == eval_harness.OPENROUTER_URL
+    assert call["api_key"] == "sk-test"
+    assert call["timeout"] == 42.0
+    p = call["payload"]
+    assert p["model"] == "test/model-1"
+    assert p["temperature"] == 0.0  # determinism default
+    assert p["messages"] == [{"role": "user", "content": "some prompt"}]
+
+
+def test_openrouter_retries_rate_limit_then_succeeds():
+    out, transport = _with_transport(
+        [_http_error(429), _http_error(503), _reply("UNAUTHORIZED (hop 2)")],
+        lambda b: b("p"))
+    assert out == "UNAUTHORIZED (hop 2)"
+    assert len(transport.calls) == 3
+
+
+def test_openrouter_raises_after_exhausted_retries():
+    def run(b):
+        try:
+            b("p")
+            return "no-raise"
+        except urllib.error.HTTPError:
+            return "raised"
+
+    out, transport = _with_transport(
+        [_http_error(429)] * 4, run, max_retries=4)
+    assert out == "raised"
+    assert len(transport.calls) == 4
+    # a non-retryable client error must raise immediately
+    out, transport = _with_transport([_http_error(401), _reply("x")], run)
+    assert out == "raised" and len(transport.calls) == 1
+
+
+def test_openrouter_http200_error_body():
+    # OpenRouter can return {"error": ...} with HTTP 200
+    def run(b):
+        try:
+            b("p")
+            return "no-raise"
+        except RuntimeError:
+            return "raised"
+
+    out, transport = _with_transport(
+        [{"error": {"code": 429, "message": "slow down"}}, _reply("AUTHORIZED")],
+        lambda b: b("p"))
+    assert out == "AUTHORIZED" and len(transport.calls) == 2
+    out, _ = _with_transport(
+        [{"error": {"code": 402, "message": "no credits"}}], run)
+    assert out == "raised"
+
+
+def test_openrouter_key_handling():
+    # missing key -> clear error at construction time
+    saved = os.environ.pop("OPENROUTER_API_KEY", None)
+    try:
+        try:
+            make_openrouter_backend("test/model-1")
+            assert False, "should raise without OPENROUTER_API_KEY"
+        except RuntimeError as e:
+            assert "OPENROUTER_API_KEY" in str(e)
+        os.environ["OPENROUTER_API_KEY"] = "sk-env"
+        _, transport = _with_transport([_reply("AUTHORIZED")],
+                                       lambda b: b("p"))
+        assert transport.calls[0]["api_key"] == "sk-test"  # explicit arg wins
+    finally:
+        os.environ.pop("OPENROUTER_API_KEY", None)
+        if saved is not None:
+            os.environ["OPENROUTER_API_KEY"] = saved
+    # the key must never be hardcoded in the source
+    src = open(os.path.join(REPO, "eval_harness.py")).read()
+    assert "sk-or-" not in src
+
+
+def test_dotenv_and_ladder():
+    with tempfile.TemporaryDirectory() as d:
+        path = os.path.join(d, ".env")
+        with open(path, "w") as f:
+            f.write("# comment\nDOTENV_TEST_KEY='v1'\nDOTENV_TEST_KEY2=v2\n")
+        os.environ["DOTENV_TEST_KEY"] = "already-set"
+        try:
+            load_dotenv(path)
+            assert os.environ["DOTENV_TEST_KEY"] == "already-set"  # env wins
+            assert os.environ["DOTENV_TEST_KEY2"] == "v2"
+        finally:
+            os.environ.pop("DOTENV_TEST_KEY", None)
+            os.environ.pop("DOTENV_TEST_KEY2", None)
+    load_dotenv(os.path.join(REPO, "no-such-file"))  # absent file is a no-op
+    saved = {k: os.environ.pop(k) for k in list(os.environ)
+             if k.endswith("_MODEL")}
+    try:
+        assert model_ladder() == DEFAULT_MODEL_LADDER
+        os.environ["SMALL_MODEL"] = " a/b "
+        os.environ["FRONTIER_MODEL"] = "c/d"
+        os.environ["EMPTY_MODEL"] = "   "  # blank slots are ignored
+        # one var per slot, ordered by variable name, whitespace stripped
+        assert model_ladder() == ["c/d", "a/b"]
+    finally:
+        for k in ("SMALL_MODEL", "FRONTIER_MODEL", "EMPTY_MODEL"):
+            os.environ.pop(k, None)
+        os.environ.update(saved)
+
+
+def test_openrouter_through_run_eval():
+    # end-to-end through run_eval with a scripted transport: one action
+    # errors out after retries and must land as a parse failure, not a crash
+    n = sum(len(tr["actions"]) for tr in TEST[:3])
+    script = []
+    for i in range(n):
+        script += ([_http_error(429)] * 4 if i == 1 else [_reply("AUTHORIZED")])
+    (out, _), transport = _with_transport(
+        script, lambda b: (run_eval(b, TEST[:3]), None))
+    recs = out["records"]
+    assert len(recs) == n
+    errs = [r for r in recs if r["error"]]
+    assert len(errs) == 1 and "HTTPError" in errs[0]["error"]
+    assert errs[0]["prediction"] is None
 
 
 # --- documented CLI entry point works, bad backend fails loudly ------------

@@ -103,7 +103,36 @@ training smoke run is deterministic on CPU under a fixed `--seed`.
 
 ## Wiring in a real model
 
-**Evaluation.** From your own script:
+**OpenRouter model ladder** (the paper's proof-of-life run). Put the key
+in the environment or a `.env` file in the repo root (gitignored — never
+commit it):
+
+```bash
+# .env
+OPENROUTER_API_KEY=sk-or-...
+# optional: one *_MODEL var per ladder slot (any names ending in _MODEL;
+# they replace the built-in default ladder, ordered by variable name)
+SMALL_MODEL=meta-llama/llama-3.1-8b-instruct
+MID_MODEL=meta-llama/llama-3.3-70b-instruct
+FLASH_MODEL=google/gemini-2.5-flash
+FRONTIER_MODEL=anthropic/claude-sonnet-4.5
+REASONING_MODEL=deepseek/deepseek-r1
+```
+
+```bash
+PYTHONPATH=. python3 eval_harness.py --ladder
+```
+
+This runs the baselines plus every ladder model (temperature 0, retries
+with backoff, per-call timeout) over the same prompts and parsing as the
+baselines, prints each model's summary as it finishes, and writes all
+entries into `proofoflife_results.json` (saved incrementally, so a crash
+mid-ladder keeps finished models). A call that still fails after retries
+is recorded as a parse failure — the safe, non-authorizing outcome.
+Individual models can also be named directly:
+`--backends heuristic openrouter:deepseek/deepseek-r1`.
+
+**Any other API.** From your own script:
 
 ```python
 from eval_harness import run_eval, print_summary
