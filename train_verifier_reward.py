@@ -180,9 +180,13 @@ def candidate_logprobs(model, tokenizer, prompt: str,
         cand_ids = tokenizer.encode(cand)
         ids = torch.tensor([prompt_ids + cand_ids], device=device)
         logits = model(input_ids=ids).logits[0]
-        logprobs = torch.log_softmax(logits.float(), dim=-1)
         start = len(prompt_ids) - 1
-        lp = sum(logprobs[start + j, cand_ids[j]] for j in range(len(cand_ids)))
+        # slice to the candidate positions BEFORE the fp32 softmax: a full
+        # sequence x vocab log-softmax kept in the graph costs hundreds of
+        # MB per forward for real vocabularies (Qwen: ~152k)
+        sel = logits[start:start + len(cand_ids)].float()
+        logprobs = torch.log_softmax(sel, dim=-1)
+        lp = sum(logprobs[j, cand_ids[j]] for j in range(len(cand_ids)))
         lps.append(lp / len(cand_ids))
     return torch.stack(lps)
 
@@ -234,6 +238,8 @@ def train(args) -> list:
     torch.manual_seed(args.seed)
 
     device = pick_device(args.device)
+    if args.save_dir:  # fail on an unusable path now, not after N steps
+        os.makedirs(args.save_dir, exist_ok=True)
     model, tokenizer = build_model_and_tokenizer(args.model, args.seed)
     model.to(device)
     model.train()
@@ -278,7 +284,7 @@ def train(args) -> list:
     for step in range(1, args.steps + 1):
         batch = [rng.choice(train_examples) for _ in range(args.batch_size)]
         rewards = []
-        step_loss = 0.0
+        step_loss = torch.zeros((), device=device)  # one host sync per step
         opt.zero_grad()
         for ex in batch:
             lps = candidate_logprobs(model, tokenizer, ex["prompt"], device)
@@ -292,13 +298,14 @@ def train(args) -> list:
             # graph is freed immediately — with real models, holding a full
             # batch of graphs would exhaust memory
             loss.backward()
-            step_loss += float(loss.detach())
+            step_loss += loss.detach()
             rewards.append(r)
         opt.step()
         mean_reward = sum(rewards) / len(rewards)
         baseline = 0.9 * baseline + 0.1 * mean_reward
         if step % args.eval_every == 0 or step == args.steps:
-            log_point(step, round(mean_reward, 4), round(step_loss, 4))
+            log_point(step, round(mean_reward, 4),
+                      round(float(step_loss), 4))
 
     log_f.close()
     print(f"wrote {args.log_file} ({len(history)} points)")
