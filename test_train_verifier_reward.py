@@ -28,6 +28,7 @@ from train_verifier_reward import (
     build_model_and_tokenizer,
     candidate_logprobs,
     compact_prompt,
+    compute_class_weights,
     evaluate,
     eval_checkpoint,
     load_examples,
@@ -63,7 +64,7 @@ def _args(**over):
     base = dict(model="tiny", steps=2, batch_size=2, lr=1e-3, seed=7,
                 train_file=TRAIN_PATH, test_file=TEST_PATH, eval_every=1,
                 eval_max_actions=8, device="cpu", save_dir=None,
-                clip_grad_norm=1.0,
+                clip_grad_norm=1.0, entropy_beta=0.0, balance_reward=False,
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
@@ -242,6 +243,26 @@ def test_evaluate_empty():
     assert m == {"n_eval_actions": 0, "accuracy": None,
                  "heldout_violation_rate": None,
                  "heldout_false_refuse_rate": None}
+
+
+# --- collapse mitigations: class weights and entropy bonus -----------------
+
+def test_class_weights_and_mitigation_flags():
+    from authority_verifier import label_action
+    exs = load_examples(TRAIN_PATH)
+    w = compute_class_weights(exs)
+    labels = [label_action(e["action"], e["chain"], e["root"]) for e in exs]
+    n1, n0 = sum(labels), len(labels) - sum(labels)
+    # inverse-frequency, normalized: expected weighted count equal per class
+    assert abs(w[0] * n0 - w[1] * n1) < 1e-9
+    ex1 = exs[labels.index(1)]
+    assert reward_for_decision(1, ex1, w) == w[1]
+    assert reward_for_decision(0, ex1, w) == -w[1]
+    assert reward_for_decision(1, ex1) == 1.0  # unweighted default intact
+    # a run with both mitigations on completes and logs normally
+    h = train(_args(entropy_beta=0.01, balance_reward=True,
+                    log_file=os.path.join(_TMP.name, "mitig_log.jsonl")))
+    assert [p["step"] for p in h] == [0, 1, 2]
 
 
 # --- checkpoint ladder-row evaluation (offline, tiny model) ----------------

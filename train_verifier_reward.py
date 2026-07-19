@@ -167,12 +167,28 @@ def load_examples(path: str) -> list:
     return examples
 
 
-def reward_for_decision(decision: int, example: dict) -> float:
+def reward_for_decision(decision: int, example: dict,
+                        class_weights: dict = None) -> float:
     """+1 iff the decision matches the verifier's verdict, else -1. The
     verifier is the sole reward source — labels stored in the corpus are
-    never read here."""
+    never read here. Optional class_weights ({verdict: weight}) scale the
+    reward by the action's true class, removing the majority-class
+    attractor that drives always-refuse collapse under label imbalance."""
     verdict = label_action(example["action"], example["chain"], example["root"])
-    return 1.0 if decision == verdict else -1.0
+    r = 1.0 if decision == verdict else -1.0
+    if class_weights:
+        r *= class_weights[verdict]
+    return r
+
+
+def compute_class_weights(examples: list) -> dict:
+    """Inverse-frequency weights over the verifier's live verdicts (never
+    the stored labels), normalized so a balanced corpus gives weight 1."""
+    labels = [label_action(ex["action"], ex["chain"], ex["root"])
+              for ex in examples]
+    n1 = sum(labels)
+    n0 = len(labels) - n1
+    return {0: len(labels) / (2 * n0), 1: len(labels) / (2 * n1)}
 
 
 # --------------------------------------------------------------------------
@@ -264,6 +280,10 @@ def train(args) -> list:
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
     train_examples = load_examples(args.train_file)
+    class_weights = (compute_class_weights(train_examples)
+                     if args.balance_reward else None)
+    if class_weights:
+        print(f"class-balanced rewards: {class_weights}")
     # Seeded shuffle before truncating: a plain [:n] slice of the trace-id-
     # sorted list would silently drop whole scenario classes from the eval.
     eval_examples = load_examples(args.test_file)
@@ -320,9 +340,15 @@ def train(args) -> list:
             probs = torch.softmax(lps.detach(), dim=0)
             idx = int(torch.multinomial(probs, 1))
             decision = 1 if idx == 0 else 0
-            r = reward_for_decision(decision, ex)
+            r = reward_for_decision(decision, ex, class_weights)
             log_pi = torch.log_softmax(lps, dim=0)[idx]
             loss = -(r - baseline) * log_pi / len(batch)
+            if args.entropy_beta > 0:
+                # entropy bonus keeps P(minority decision) alive so the
+                # policy keeps exploring instead of locking into refusal
+                logp = torch.log_softmax(lps, dim=0)
+                entropy = -(logp.exp() * logp).sum()
+                loss = loss - args.entropy_beta * entropy / len(batch)
             # backward per example: same gradient as a stacked mean, but each
             # graph is freed immediately — with real models, holding a full
             # batch of graphs would exhaust memory
@@ -412,6 +438,13 @@ def main() -> None:
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--clip-grad-norm", type=float, default=1.0,
                     help="max gradient norm per step (0 disables clipping)")
+    ap.add_argument("--entropy-beta", type=float, default=0.0,
+                    help="entropy-bonus coefficient (e.g. 0.01) to prevent "
+                         "collapse into a single decision")
+    ap.add_argument("--balance-reward", action="store_true",
+                    help="scale rewards by inverse class frequency of the "
+                         "verifier's verdicts (removes the majority-class "
+                         "always-refuse attractor)")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--train-file", default="benchmark_train.jsonl")
     ap.add_argument("--test-file", default="benchmark_test.jsonl")
