@@ -41,7 +41,8 @@ overriding the real environment):
   *_MODEL             one env var per ladder slot (e.g. SMALL_MODEL,
                       MID_MODEL, FRONTIER_MODEL, REASONING_MODEL); if any
                       are set they replace the built-in default ladder,
-                      ordered by variable name
+                      ordered by variable name (only values shaped like
+                      'org/model' OpenRouter IDs count)
 
 Wire in any other model by calling `run_eval(my_answer_fn, traces)` from
 your own script (see README). A backend that raises is recorded as a parse
