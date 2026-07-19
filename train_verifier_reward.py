@@ -88,6 +88,11 @@ def build_model_and_tokenizer(name: str, seed: int):
         config = GPT2Config(vocab_size=256, n_positions=1024,
                             n_embd=32, n_layer=2, n_head=2)
         return GPT2LMHeadModel(config), ByteTokenizer()
+    if os.path.isdir(name) and not os.path.exists(
+            os.path.join(name, "tokenizer_config.json")):
+        # a saved tiny-model checkpoint: weights only, byte tokenizer
+        from transformers import AutoModelForCausalLM
+        return AutoModelForCausalLM.from_pretrained(name), ByteTokenizer()
     from transformers import AutoModelForCausalLM, AutoTokenizer
     tok = AutoTokenizer.from_pretrained(name)
     model = AutoModelForCausalLM.from_pretrained(name)
