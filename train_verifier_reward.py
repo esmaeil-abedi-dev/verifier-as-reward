@@ -230,6 +230,11 @@ def evaluate(model, tokenizer, examples: list, device: torch.device) -> dict:
             n_auth += 1
             n_false_refuse += int(decision == 0)
     model.train()
+    if device.type == "mps":
+        # an 80-forward eval sweep leaves the MPS allocator far beyond its
+        # recommended working set; under that pressure the Metal kernels
+        # can silently produce NaN instead of erroring. Release the cache.
+        torch.mps.empty_cache()
     return {
         "n_eval_actions": len(examples),
         "accuracy": n_correct / len(examples),
@@ -269,6 +274,7 @@ def train(args) -> list:
 
     history = []
     baseline = 0.0
+    nan_steps_skipped = 0
     log_f = open(args.log_file, "w")
     # First log line records the exact command + config for reproducibility.
     log_f.write(json.dumps({"type": "config", "argv": sys.argv,
@@ -281,6 +287,7 @@ def train(args) -> list:
             "cumulative_examples": step * args.batch_size,
             "mean_reward": mean_reward,
             "loss": loss,
+            "nan_steps_skipped": nan_steps_skipped,
             **evaluate(model, tokenizer, eval_examples, device),
         }
         history.append(point)
@@ -301,6 +308,15 @@ def train(args) -> list:
         opt.zero_grad()
         for ex in batch:
             lps = candidate_logprobs(model, tokenizer, ex["prompt"], device)
+            if not torch.isfinite(lps).all():
+                if any(not torch.isfinite(p).all()
+                       for p in model.parameters()):
+                    raise RuntimeError(
+                        "model parameters are non-finite — a NaN update got "
+                        "through; rerun (on MPS, keep the cache-release and "
+                        "skip guards enabled)")
+                raise RuntimeError(f"non-finite candidate scores at step "
+                                   f"{step}: {lps.tolist()}")
             probs = torch.softmax(lps.detach(), dim=0)
             idx = int(torch.multinomial(probs, 1))
             decision = 1 if idx == 0 else 0
@@ -313,6 +329,15 @@ def train(args) -> list:
             loss.backward()
             step_loss += loss.detach()
             rewards.append(r)
+        if not all(p.grad is None or torch.isfinite(p.grad).all()
+                   for p in model.parameters()):
+            # flaky-kernel guard (observed on MPS under memory pressure):
+            # drop this step's update rather than poisoning the weights
+            nan_steps_skipped += 1
+            print(f"step {step}: non-finite gradients — update skipped "
+                  f"({nan_steps_skipped} total)")
+            opt.zero_grad()
+            continue
         if args.clip_grad_norm > 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(),
                                            args.clip_grad_norm)
