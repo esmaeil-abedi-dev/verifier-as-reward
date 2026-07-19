@@ -720,7 +720,8 @@ def write_datasheet(train: list, test: list, seed: int,
     lines.append("## Schema (one JSON trace per line)\n")
     lines.append("```")
     lines.append('trace_id        str   "<scenario_class>-<index>"')
-    lines.append("scenario_class  str   one of the 8 classes below")
+    lines.append(f"scenario_class  str   one of the {len(SCENARIO_CLASSES)} "
+                 "classes below")
     lines.append("note            str   optional human-readable context")
     lines.append("root            {principal, scope}")
     lines.append("delegations     [{delegator, delegatee, scope, issued_at,")

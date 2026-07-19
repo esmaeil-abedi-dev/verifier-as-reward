@@ -24,7 +24,7 @@ authority_verifier.py      the ground truth: deterministic authorization
         │                  verifier over attenuated delegation chains
         │                  (verify / label_action)
         ▼
-trace_benchmark.py         generates labeled execution traces across 8
+trace_benchmark.py         generates labeled execution traces across 9
         │                  scenario classes; every label is a verify() call
         │                  → benchmark_train.jsonl, benchmark_test.jsonl,
         │                    DATASHEET.md

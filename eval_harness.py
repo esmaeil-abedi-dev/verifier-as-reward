@@ -29,9 +29,10 @@ no-network baselines for calibration:
   - oracle            : answers from the verifier itself (upper bound / sanity)
 
 Wire in a real model by calling `run_eval(my_answer_fn, traces)` from your
-own script (see README). A backend that raises or returns a non-string is
-recorded as a parse failure for that action; completed records are never
-lost. This module itself makes no network calls.
+own script (see README). A backend that raises is recorded as a parse
+failure for that action; a non-string reply is coerced to text and scored
+if parseable. Completed records are never lost. This module itself makes
+no network calls.
 
 Scoring contract: replies are matched for the words AUTHORIZED /
 UNAUTHORIZED (parse-order handles the substring overlap; NOT AUTHORIZED
@@ -279,9 +280,10 @@ def compute_metrics(records: list) -> dict:
 def run_eval(answer_fn: Callable[[str], str], traces: list) -> dict:
     """Evaluate one backend over every action in `traces`. Labels come from
     the stored corpus, which test_trace_benchmark verifies to be exactly the
-    verifier's verdicts. A backend call that raises (rate limit, timeout) or
-    returns a non-string is recorded as a parse failure for that action —
-    completed records are never discarded."""
+    verifier's verdicts. A backend call that raises (rate limit, timeout) is
+    recorded as a parse failure for that action; a non-string reply is
+    coerced to text and scored if parseable. Completed records are never
+    discarded."""
     records = []
     for tr in traces:
         for aj in tr["actions"]:

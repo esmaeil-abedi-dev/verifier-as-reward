@@ -8,7 +8,7 @@ A synthetic corpus of agent execution traces for the task of action-authorizatio
 
 ```
 trace_id        str   "<scenario_class>-<index>"
-scenario_class  str   one of the 8 classes below
+scenario_class  str   one of the 9 classes below
 note            str   optional human-readable context
 root            {principal, scope}
 delegations     [{delegator, delegatee, scope, issued_at,
