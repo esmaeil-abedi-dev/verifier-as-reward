@@ -4,3 +4,5 @@ __pycache__/
 .env
 ckpt_*/
 training_log_*.jsonl.tmp
+expanded_train.jsonl
+expanded_val.jsonl

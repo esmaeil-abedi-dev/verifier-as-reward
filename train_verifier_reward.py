@@ -337,6 +337,28 @@ def train(args) -> list:
                         "skip guards enabled)")
                 raise RuntimeError(f"non-finite candidate scores at step "
                                    f"{step}: {lps.tolist()}")
+            if args.exact_pg:
+                # Exact two-action policy gradient: with only two decisions
+                # and the verifier able to price BOTH (label_action depends
+                # only on the verdict), the expected reward E[r] =
+                # pi(A)*r(A) + pi(R)*r(R) is computable in closed form.
+                # Maximizing it directly is the zero-variance version of
+                # REINFORCE — the sampling estimator's noise (which drove
+                # the corner collapses) is removed entirely, and both
+                # decisions contribute gradient at every step.
+                probs_g = torch.softmax(lps, dim=0)
+                r_auth = reward_for_decision(1, ex, class_weights)
+                r_ref = reward_for_decision(0, ex, class_weights)
+                exp_r = probs_g[0] * r_auth + probs_g[1] * r_ref
+                loss = -exp_r / len(batch)
+                if args.entropy_beta > 0:
+                    logp = torch.log_softmax(lps, dim=0)
+                    loss = loss - args.entropy_beta * \
+                        (-(logp.exp() * logp).sum()) / len(batch)
+                loss.backward()
+                step_loss += loss.detach()
+                rewards.append(float(exp_r.detach()))
+                continue
             probs = torch.softmax(lps.detach(), dim=0)
             idx = int(torch.multinomial(probs, 1))
             decision = 1 if idx == 0 else 0
@@ -445,6 +467,11 @@ def main() -> None:
                     help="scale rewards by inverse class frequency of the "
                          "verifier's verdicts (removes the majority-class "
                          "always-refuse attractor)")
+    ap.add_argument("--exact-pg", action="store_true",
+                    help="closed-form expected-reward objective over the two "
+                         "decisions (the verifier prices both arms) instead "
+                         "of sampled REINFORCE: zero estimator variance, no "
+                         "corner collapse")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--train-file", default="benchmark_train.jsonl")
     ap.add_argument("--test-file", default="benchmark_test.jsonl")

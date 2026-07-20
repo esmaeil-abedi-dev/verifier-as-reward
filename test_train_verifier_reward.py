@@ -65,6 +65,7 @@ def _args(**over):
                 train_file=TRAIN_PATH, test_file=TEST_PATH, eval_every=1,
                 eval_max_actions=8, device="cpu", save_dir=None,
                 clip_grad_norm=1.0, entropy_beta=0.0, balance_reward=False,
+                exact_pg=False,
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
@@ -263,6 +264,29 @@ def test_class_weights_and_mitigation_flags():
     h = train(_args(entropy_beta=0.01, balance_reward=True,
                     log_file=os.path.join(_TMP.name, "mitig_log.jsonl")))
     assert [p["step"] for p in h] == [0, 1, 2]
+
+
+# --- exact policy gradient: deterministic, learns, no sampling -------------
+
+def test_exact_pg_runs_and_is_deterministic():
+    h1 = train(_args(exact_pg=True, balance_reward=True,
+                     log_file=os.path.join(_TMP.name, "epg1.jsonl")))
+    h2 = train(_args(exact_pg=True, balance_reward=True,
+                     log_file=os.path.join(_TMP.name, "epg2.jsonl")))
+    assert h1 == h2, "exact-pg must be fully deterministic per seed"
+    for p in h1[1:]:
+        assert isinstance(p["mean_reward"], float)  # expected reward, smooth
+
+
+def test_exact_pg_increases_expected_reward():
+    # on the tiny model with a healthy lr, the closed-form objective must
+    # push the expected verifier reward up within a few steps
+    h = train(_args(exact_pg=True, steps=12, batch_size=4, lr=5e-3,
+                    eval_every=1,
+                    log_file=os.path.join(_TMP.name, "epg3.jsonl")))
+    rewards = [p["mean_reward"] for p in h[1:]]
+    first, last = sum(rewards[:3]) / 3, sum(rewards[-3:]) / 3
+    assert last > first, f"expected reward did not rise: {first} -> {last}"
 
 
 # --- checkpoint ladder-row evaluation (offline, tiny model) ----------------
