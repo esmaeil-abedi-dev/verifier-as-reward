@@ -11,8 +11,9 @@ import trace_benchmark
 from authority_verifier import verify
 from make_expanded_train import corpus_canonicals
 from make_novel_domain import (
-    NOVEL_DOMAINS,
+    NOVEL_DOMAIN_POOL,
     TRAINING_DOMAIN_PREFIXES,
+    TRAINING_RESOURCE_PREFIXES,
     generate_novel,
 )
 from trace_benchmark import generate_corpus, trace_to_objects
@@ -37,6 +38,21 @@ def test_domains_are_novel():
                       for tr in NOVEL for a in tr["actions"]}
     assert novel_prefixes == {"calendar", "cloud"}
     assert not (novel_prefixes & TRAINING_DOMAIN_PREFIXES)
+
+
+def test_pool_prefixes_all_disjoint_from_training():
+    for name, d in NOVEL_DOMAIN_POOL.items():
+        assert d["pattern"].split(".")[0] not in TRAINING_DOMAIN_PREFIXES, name
+        assert d["top"].split(":")[0] not in TRAINING_RESOURCE_PREFIXES, name
+    # at least one budgeted domain exists so budget_violation is buildable
+    assert any(d["budgeted"] for d in NOVEL_DOMAIN_POOL.values())
+
+
+def test_multi_domain_selection():
+    multi = generate_novel(404, 10, ["iot", "finance", "storage"])
+    prefixes = {a["action"].split(".")[0]
+                for tr in multi for a in tr["actions"]}
+    assert prefixes == {"device", "trade", "blob"}
 
 
 def test_all_classes_present():

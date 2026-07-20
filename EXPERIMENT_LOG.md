@@ -40,6 +40,40 @@ added specifically to defeat surface-cue shortcuts (see §3).
 
 ---
 
+## 1a. Write-up guidance — scope of the generalization claim (vocabulary vs. formalism)
+
+The generalization results (fresh-unseen, domain-hold-out, zero-shot novel
+domains) all vary the **vocabulary** — action namespaces and resource string
+formats — while holding the **formalism** fixed: object-capability attenuated
+delegation, glob resource matching, per-action budget caps, and logical-time
+validity windows (issue/expiry/revocation). The verifier implements exactly
+this one formalism, and every domain (email … cloud … calendar) is an instance
+of it.
+
+- **Claim we CAN make:** the model learned authorization *structure* that
+  transfers across domain vocabulary *within* the attenuated-delegation model.
+  State it at that scope — do not overclaim "learns authorization in general."
+- **What we did NOT test — and why testing it on the trained model would be
+  unfair:** a *different formalism* (RBAC, ACLs, MAC, obligations, cumulative
+  budgets) has *different correct answers*. The model was taught delegation
+  rules; asking it to follow RBAC rules it never saw would fail by
+  construction and would say nothing about generalization (it is a different
+  task, not harder OOD). Do not run "trained model on a new formalism" as a
+  generalization probe.
+- **The formalism-generality question that IS meaningful (future work):**
+  whether the *method* (verifier-CE) works for OTHER authorization models —
+  answered by writing a SECOND deterministic verifier (e.g. RBAC), generating
+  its benchmark, and training a fresh model. That tests method generality, a
+  different and stronger claim, and requires a new verifier (added alongside,
+  not replacing, the given one). Flag as a proposed follow-up.
+
+One-line framing for the paper: *"within the delegation-authority formalism,
+verifier-CE learns structure that transfers zero-shot across domain vocabulary
+(0.978 on invented domains); generality across authorization formalisms is
+left to future work via additional verifiers."*
+
+---
+
 ## 1b. IMPORTANT — there are TWO trained models, and why
 
 Same method (verifier cross-entropy from Qwen2.5-0.5B), **different training
@@ -324,6 +358,15 @@ expiry, budgets), not the surface vocabulary of its training domains. Note
 these novel domains are *further* from training than file/db, yet accuracy
 does not drop — the strongest single piece of transfer evidence. (Run on
 Apple MPS, forward-only inference; deterministic greedy decisions.)
+
+**Not specific to two domains — six invented domains, 640 actions**
+(`calendar, cloud, iot, finance, messaging, storage`;
+`make_novel_domain.py --domains calendar,cloud,iot,finance,messaging,storage`):
+deployed model **0.972** overall (false-authorize 0.026, false-refuse 0.031),
+matching the calendar/cloud 0.978. Per-class again perfect except
+`chain_structure` 0.912. Two independent novel-domain draws (2-domain 0.978,
+6-domain 0.972) put zero-shot cross-vocabulary transfer at **≈0.97–0.98** —
+the claim is robust, not domain-cherry-picked.
 
 **In-distribution generalization on FRESH unseen data** (released seed-9
 checkpoint `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b`, evaluated via
