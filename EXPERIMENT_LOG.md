@@ -322,18 +322,32 @@ transcribed):
 | OOD acc | 0.390 | 0.535 | 0.795 | 0.805 | 0.850 | 0.935 | 0.965 | 0.970 | **0.970** |
 | false-refuse | 0.000 | 0.462 | 0.449 | 0.359 | 0.385 | 0.013 | 0.000 | 0.000 | 0.000 |
 
-**Seed-7 OOD accuracy 0.970 on entirely unseen domains** — a ~1-point drop
-from the in-distribution ~0.975–0.983. The model trained on 3 domains
-transfers to 2 held-out domains (unseen actions and resource formats) at
-near-parity. This is the STRONG outcome: verifier-CE learned **domain-
-invariant authorization logic**, not the generator's per-domain
-distribution. Trajectory note: violation rate drops first (the "when to
-refuse" logic transfers early), false-refuse falls later (the model is
-initially cautious about authorizing unseen resource formats, then
-generalizes the authorize side too) — reaching both-errors-low by step 400.
-**Preliminary:** seed 7 only, 200-action eval subset; the full 1150-action
-OOD number, seeds 8/9, and the OOD gap (train-domain − held-out-domain
-accuracy) come with `overfitting_checks.zip`.
+**FINAL OOD result (3 seeds, full 1150-action held-out test set,
+`results_ood.json`):**
+
+| seed | held-out accuracy | false-authorize | false-refuse |
+|---|---|---|---|
+| 7 | 0.968 | 0.058 | 0.000 |
+| 8 | 0.970 | 0.008 | 0.059 |
+| 9 | 0.967 | 0.058 | 0.002 |
+| **mean** | **0.968 ± 0.001** | 0.041 ± 0.024 | — |
+
+**0.968 ± 0.001 on entirely unseen domains** — a ~1-point drop from the
+in-distribution 0.975–0.983, with an extremely tight seed spread. The model
+trained on email/payment/repo transfers to the held-out file/db domains
+(unseen actions and resource formats) at near-parity. This is the STRONG
+outcome: verifier-CE learned **domain-invariant authorization logic**, not
+the generator's per-domain distribution. Per-class (seed 7, held-out):
+expiry / multi_hop / single_delegation 1.00, revocation 0.994,
+scope_escalation 0.966, resource_violation 0.962, attack_confused_deputy
+0.974, **chain_structure 0.872** — the same hardest class as everywhere else.
+Trajectory: violation rate drops first (the "when to refuse" logic transfers
+early), false-refuse falls later (the model is initially cautious about
+authorizing unseen resource formats, then generalizes the authorize side).
+(OOD train-vs-held-out gap: the eval cell also prints each checkpoint's
+accuracy on its own training domains; those lines were not merged into
+`results_ood.json`, so the exact gap number is not captured here — but the
+held-out 0.968 vs the in-distribution ~0.98 bounds it at ~1–2pp.)
 
 **ZERO-SHOT on BRAND-NEW domains — the deployed model, no retraining**
 (`make_novel_domain.py` → `--eval-checkpoint`). The **released all-domains
@@ -486,12 +500,14 @@ fixing the cold-start exploration failure that sank Arms A–D.
   0.978, matching the committed test. Memorization and validation-tuning are
   both ruled out.
 - **Out-of-distribution transfer, two ways:** (a) domain hold-out — a model
-  CE-trained on 3 domains (email/payment/repo) reaches **0.970** on the
-  held-out file/db domains (seed 7 preliminary); (b) **zero-shot on brand-new
-  domains — the DEPLOYED model, no retraining — reaches 0.978** on 640 actions
-  in `calendar`/`cloud` (never-seen actions and resource formats). Near-parity
-  with in-distribution despite a vocabulary the model never saw ⇒ it learned
-  authorization *structure*, not per-domain surface patterns.
+  CE-trained on 3 domains (email/payment/repo) reaches **0.968 ± 0.001** (3
+  seeds, full 1150-action held-out file/db test); (b) **zero-shot on brand-new
+  domains — the DEPLOYED model, no retraining — reaches 0.972–0.978** on
+  invented domains (`calendar, cloud, iot, finance, messaging, storage`;
+  never-seen actions and resource formats). Near-parity with in-distribution
+  despite vocabularies the model never saw ⇒ it learned authorization
+  *structure*, not per-domain surface patterns. Scope: cross-vocabulary
+  within the delegation formalism (§1a).
 - The paper's arc: pure verifier-RL fails at 0.5B by optimization pathology
   (variance collapse A/B/C, gradient saturation D); the same verifier signal
   used as a cross-entropy target (E) converges cleanly to near-frontier
@@ -688,10 +704,10 @@ each diagnosed and fixed, before abandoning local training:
 | CE seed-7/8 val curves (0.983) | **transcribed from console** (preliminary block) |
 | train–test gap (train 0.986 / test 0.975) | **transcribed from console**, released model via `colab_overfitting_checks.ipynb` Check 1 |
 | fresh-unseen 0.978 (960 actions, seed 999) | **transcribed from console**, `colab_eval_released.ipynb` |
-| OOD domain-hold-out (seed 7, 0.970) | **transcribed from console**, seed-7 only + 200-action subset; seeds 8/9 + full 1150 pending zip |
+| `training_log_ood_seed{7,8,9}` + `results_ood.json` (OOD 0.968 ± 0.001) | native, Colab, 3 seeds, full 1150-action held-out file/db |
 | zero-shot novel domains: 0.978 (calendar/cloud), 0.972 (6 domains) | **native, local Apple MPS** forward-only eval of the deployed model |
 | released model `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b` | HF Hub, seed-9 CE checkpoint (fp16); NOT in git (weights on Hub) |
-| `overfitting_checks.zip` (full OOD 3-seed + gap) | **not yet produced** (finish `colab_overfitting_checks.ipynb`) |
+| `overfitting_checks.zip` | received; native OOD logs + results extracted into repo |
 
 Every native training log carries a first-line `config` record. Transcribed /
 partial logs carry a `_provenance` field. The committed `benchmark_test.jsonl`
@@ -729,10 +745,9 @@ corpora and logs, `ckpt_*` checkpoints, `.env`, the released weights (HF Hub).
 
 ## A.11 Open / pending items (nothing lost — just not yet run)
 
-- OOD domain-hold-out: **seeds 8/9** and the **full 1150-action** number +
-  the OOD train-vs-held-out **gap** (`overfitting_checks.zip`). Seed 7 = 0.970.
-- CE **seeds 8/9 committed-test** are done (0.988/0.975); only the OOD seeds
-  8/9 remain.
+- OOD domain-hold-out: **DONE** — 3 seeds, 0.968 ± 0.001 on the full
+  1150-action held-out set. (Only the exact train-vs-held-out gap number was
+  not merged into the results JSON; bounded ~1–2pp.)
 - **CE→RL refinement** (returns RL to the story; warm-start then RL with a KL
   anchor) — designed in `RELATED_WORK_AND_DIRECTIONS.md`, not yet run.
 - **Method-generality across formalisms** (a 2nd verifier, e.g. RBAC) — future
