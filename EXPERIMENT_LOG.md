@@ -215,6 +215,18 @@ experiments; they answer whether 0.983 reflects the learned *rule* vs. the
 generator's distribution. Do NOT report 0.983 as out-of-distribution
 generalization.
 
+**In-distribution generalization on FRESH unseen data** (released seed-9
+checkpoint `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b`, evaluated via
+`colab_eval_released.ipynb` on 960 actions generated from a NEW seed 999 and
+deduplicated against training + committed test; transcribed from console):
+overall accuracy **0.978**, false-authorize 0.029, false-refuse 0.014. On
+960 never-seen actions this matches the 80-action committed test (0.975) with
+a much tighter CI (±~1pp vs ±~10pp). Per-class again perfect except
+`chain_structure` 0.908 (false-auth 0.088), `budget_violation` 0.975,
+`scope_escalation` 0.975, `multi_hop` 0.95. This decisively rules out
+example memorization: the model generalizes to fresh draws it never saw at
+the same accuracy. Still same-distribution (all 5 domains) — not OOD.
+
 ---
 
 #### (superseded) preliminary validation record — kept for the trajectory
