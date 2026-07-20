@@ -301,6 +301,30 @@ generalizes the authorize side too) — reaching both-errors-low by step 400.
 OOD number, seeds 8/9, and the OOD gap (train-domain − held-out-domain
 accuracy) come with `overfitting_checks.zip`.
 
+**ZERO-SHOT on BRAND-NEW domains — the deployed model, no retraining**
+(`make_novel_domain.py` → `--eval-checkpoint`). The **released all-domains
+model** (seed 9) evaluated on 640 actions in two domains the benchmark never
+contained — `calendar` (`calendar.create`, `cal:eng/event-…`) and `cloud`
+(`cloud.deploy`, `svc:prod/inst-…`) — new action namespaces AND new resource
+formats. This is a valid OOD probe of the DEPLOYED artifact itself (unlike the
+file/db hold-out, which needs the separate 3-domain OOD model — see §1b):
+
+| metric | value |
+|---|---|
+| overall accuracy | **0.978** |
+| false-authorize (headline) | 0.026 |
+| false-refuse | 0.017 |
+
+Per-class: 1.00 on attack_confused_deputy, expiry, resource_violation,
+revocation, single_delegation; 0.975 scope_escalation, 0.975 multi_hop, 0.95
+budget_violation, **0.912 chain_structure**. Essentially identical to the
+in-distribution ~0.975–0.978 despite a vocabulary the model never saw — so it
+learned authorization *structure* (delegation, attenuation, revocation,
+expiry, budgets), not the surface vocabulary of its training domains. Note
+these novel domains are *further* from training than file/db, yet accuracy
+does not drop — the strongest single piece of transfer evidence. (Run on
+Apple MPS, forward-only inference; deterministic greedy decisions.)
+
 **In-distribution generalization on FRESH unseen data** (released seed-9
 checkpoint `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b`, evaluated via
 `colab_eval_released.ipynb` on 960 actions generated from a NEW seed 999 and
@@ -418,12 +442,13 @@ fixing the cold-start exploration failure that sank Arms A–D.
   independent check — 960 freshly generated actions from a new seed — scores
   0.978, matching the committed test. Memorization and validation-tuning are
   both ruled out.
-- **Out-of-distribution transfer (domain hold-out):** CE-trained on 3 domains
-  (email/payment/repo), evaluated on 2 held-out domains (file/db — unseen
-  actions and resource formats), seed 7 reaches **0.970**, a ~1pp drop from
-  in-distribution. The model learned domain-invariant authorization logic, not
-  per-domain regularities. (Seed 7 preliminary; full 1150-action number +
-  seeds 8/9 pending the zip.)
+- **Out-of-distribution transfer, two ways:** (a) domain hold-out — a model
+  CE-trained on 3 domains (email/payment/repo) reaches **0.970** on the
+  held-out file/db domains (seed 7 preliminary); (b) **zero-shot on brand-new
+  domains — the DEPLOYED model, no retraining — reaches 0.978** on 640 actions
+  in `calendar`/`cloud` (never-seen actions and resource formats). Near-parity
+  with in-distribution despite a vocabulary the model never saw ⇒ it learned
+  authorization *structure*, not per-domain surface patterns.
 - The paper's arc: pure verifier-RL fails at 0.5B by optimization pathology
   (variance collapse A/B/C, gradient saturation D); the same verifier signal
   used as a cross-entropy target (E) converges cleanly to near-frontier
