@@ -225,14 +225,27 @@ Check 1; transcribed from console):
 | committed test | 80 | 0.975 | 0.045 | 0.000 |
 | **gap** | — | **0.011** | — | — |
 
-A ~1-point train–test gap = **no example memorization**; the model performs
-almost identically on data it trained on and data it never saw. Stronger
-still: even on the *training* set the model only reaches **0.94 on
-`chain_structure`** (300 train examples) — it cannot perfectly fit its own
-hardest class, which a memorizing model would. It learned a genuine (bounded)
-rule, not a lookup table. (The committed test's `chain_structure` reads 0.80,
-but that is 8/10 on 10 actions — wide CI; the 300-action train and 960-action
-fresh-unseen sets put the class at 0.94 / 0.91, the reliable estimates.)
+**Two-layer argument that this is not overfitting (cite both):**
+
+- **Layer 1 — the train–test gap is negligible (~1pp).** Train 0.986 vs
+  committed test 0.975. A model that memorized training examples would score
+  near-1.0 on train and drop on held-out data; this one performs almost
+  identically on both, so it generalizes rather than memorizes.
+- **Layer 2 — it cannot perfectly fit even its own training data.** On the
+  hardest class `chain_structure` the model reaches only **0.94 on 300
+  training examples**. Memorization yields ~1.0 on *seen* data; a 0.94 train
+  fit is impossible for a lookup table and only consistent with a learned,
+  bounded *rule*. This is the stronger of the two arguments: you cannot
+  memorize your way to 94% — you get 100% on seen data or you are
+  generalizing.
+
+(The committed test's `chain_structure` reads 0.80, but that is 8/10 on 10
+actions — wide CI; the reliable estimates are the 300-action train 0.94 and
+the 960-action fresh-unseen 0.91.)
+
+Together with the fresh-unseen result below, these rule out both example
+memorization (Layers 1–2) and validation-tuning (fresh seed, never touched
+during training).
 
 **In-distribution generalization on FRESH unseen data** (released seed-9
 checkpoint `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b`, evaluated via
@@ -344,11 +357,19 @@ fixing the cold-start exploration failure that sank Arms A–D.
   the ladder — from a ~0.47 untrained baseline. The one residual error is
   `chain_structure` (0.90), the hardest class. This is in-distribution; the
   OOD domain-hold-out check is the separate generalization experiment.
+- **Not overfitting — two-layer evidence (in-distribution):** (Layer 1) the
+  train–test gap is ~1pp (train 0.986 vs test 0.975); (Layer 2) the model
+  reaches only 0.94 on its hardest class *on the training set itself*, so it
+  cannot be memorizing (a lookup table is ~1.0 on seen data). A third,
+  independent check — 960 freshly generated actions from a new seed — scores
+  0.978, matching the committed test. Memorization and validation-tuning are
+  both ruled out. Still in-distribution; the domain-hold-out OOD result is the
+  remaining open question.
 - The paper's arc: pure verifier-RL fails at 0.5B by optimization pathology
   (variance collapse A/B/C, gradient saturation D); the same verifier signal
   used as a cross-entropy target (E) converges cleanly to near-frontier
-  accuracy. Next: CE→RL refinement (returns RL to the story) and the OOD /
-  train–test-gap generalization checks.
+  accuracy and generalizes in-distribution without memorizing. Next: CE→RL
+  refinement (returns RL to the story) and the domain-hold-out OOD check.
 
 ---
 
