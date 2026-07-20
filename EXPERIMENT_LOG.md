@@ -79,12 +79,13 @@ left to future work via additional verifiers."*
 Same method (verifier cross-entropy from Qwen2.5-0.5B), **different training
 data on purpose.** Do not conflate them in the paper.
 
-| | **Released model** | **OOD model** |
+| | **Released (all-domains) model** | **OOD model** |
 |---|---|---|
-| Hub / name | `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b` (seed 9) | `ckpt_ood_seed{7,8,9}` (not released by default) |
+| Hub / name | `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b` (seed 9) | `esmaeil-abedi-dev/verifier-ood-qwen2.5-0.5b` (seed 8) |
 | trained on | **all 5 domains** — `expanded_train.jsonl`, 2400 actions | **3 domains only** (email, payment, repo) — `ood_train.jsonl`, 2050 actions |
 | file/db seen in training? | **yes** | **no (held out)** |
-| used for | headline in-distribution result (0.983), train–test gap, fresh-unseen (0.978) | the OOD transfer test (0.970 on the held-out file/db domains) |
+| used for | headline in-distribution result (0.983), train–test gap, fresh-unseen (0.978), zero-shot novel domains (0.972–0.978) | the OOD transfer test (0.970 held-out file/db; train-domain 0.985, gap ~1.5pp) |
+| both published on the Hub | yes | yes |
 
 **Why two models are required (not a mistake):** an out-of-distribution test
 is only valid if the test domains were *never seen in training*. The released
@@ -722,7 +723,8 @@ each diagnosed and fixed, before abandoning local training:
 | fresh-unseen 0.978 (960 actions, seed 999) | **transcribed from console**, `colab_eval_released.ipynb` |
 | `training_log_ood_seed{7,8,9}` + `results_ood.json` (OOD 0.968 ± 0.001) | native, Colab, 3 seeds, full 1150-action held-out file/db |
 | zero-shot novel domains: 0.978 (calendar/cloud), 0.972 (6 domains) | **native, local Apple MPS** forward-only eval of the deployed model |
-| released model `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b` | HF Hub, seed-9 CE checkpoint (fp16); NOT in git (weights on Hub) |
+| released all-domains model `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b` | HF Hub, seed-9 CE checkpoint (fp16); NOT in git (weights on Hub) |
+| released OOD model `esmaeil-abedi-dev/verifier-ood-qwen2.5-0.5b` | HF Hub, seed-8 OOD checkpoint (3-domain, fp16); NOT in git |
 | `overfitting_checks.zip` | received; native OOD logs + results extracted into repo |
 
 Every native training log carries a first-line `config` record. Transcribed /
@@ -751,7 +753,8 @@ was evaluated once per method and never regenerated.
 **Docs:**
 - `README.md` — overview, run commands, objectives, released model
 - `DATASHEET.md` — benchmark datasheet (generated)
-- `MODEL_CARD.md` — HF Hub model card (eval table, released = seed 9)
+- `MODEL_CARD.md` — HF Hub card, all-domains model (seed 9)
+- `MODEL_CARD_OOD.md` — HF Hub card, OOD 3-domain model (seed 8)
 - `RELEASE_HOWTO.md` — copy-paste cells to push a checkpoint to the Hub
 - `RELATED_WORK_AND_DIRECTIONS.md` — 6 sources (fetched/read) + CE→RL recipe
 - `EXPERIMENT_LOG.md` — this file
