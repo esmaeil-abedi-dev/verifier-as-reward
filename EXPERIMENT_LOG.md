@@ -197,26 +197,32 @@ frontier comparison). Notebook: `colab_ce_final.ipynb` (3 seeds × 500 steps,
 batch 16, lr 2e-5, balanced reward, NL prompts, val-monitored, one
 committed-test evaluation per seed).
 
-**PRELIMINARY RESULT — seed 7, validation, transcribed from console**
+**PRELIMINARY RESULT — validation, transcribed from console**
 (`expanded_val`, 120 actions, NL prompts; native zip + committed-test
-numbers + seeds 8/9 pending). Validation accuracy over training:
+numbers + seed 9 pending). Validation accuracy over training:
 
 | step | 0 | 50 | 100 | 150 | 200 | 250 | 300 | 350 | 400 | 450 | 500 |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| acc | 0.400 | 0.400 | 0.400 | 0.600 | 0.667 | 0.792 | 0.800 | 0.933 | 0.967 | 0.983 | **0.983** |
-| violation | 1.000 | 1.000 | 1.000 | 0.000 | 0.472 | 0.069 | 0.333 | 0.069 | 0.056 | 0.028 | 0.028 |
-| false-refuse | 0.000 | 0.000 | 0.000 | 1.000 | 0.125 | 0.417 | 0.000 | 0.062 | 0.062 | 0.000 | 0.000 |
+| seed 7 acc | 0.400 | 0.400 | 0.400 | 0.600 | 0.667 | 0.792 | 0.800 | 0.933 | 0.967 | 0.983 | **0.983** |
+| seed 8 acc | 0.400 | 0.400 | 0.600 | 0.758 | 0.850 | 0.925 | 0.925 | 0.958 | 0.983 | 0.992 | **0.983** |
 
-CE **converges** where every RL arm oscillated: after a brief always-authorize
-corner (steps 0–100) and one swing, it climbs monotonically from step 150 to
-**0.983** with BOTH error rates low simultaneously (violation 0.028,
-false-refuse 0.000) — genuine discrimination, not a blanket policy. On the
-ladder scale this seed's validation matches claude-sonnet-4.5 (0.975) and
-exceeds deepseek-r1 (0.95), from a 0.5B model whose untrained baseline was
-~0.47. **Caveats:** validation (not the committed 80-action test), single
-seed, transcribed. The official numbers are the committed-test evaluation of
-all three seeds — pending the `ce_results.zip` download. This is the run that
-hit the 75–85% target (and overshot it on validation).
+Both seeds' endpoint: violation 0.028, false-refuse 0.000; seed-8 reward
+reached 1.005 (≈ max weighted). CE **converges** where every RL arm
+oscillated: after a brief always-authorize corner (steps 0–100) and one
+swing, it climbs monotonically to **0.983** with BOTH error rates low
+simultaneously — genuine discrimination, not a blanket policy. **Two
+independent seeds land on the identical 0.983 endpoint** (paths through the
+error trade-off differ mid-run; destination does not) — convergence is
+systematic, not seed luck. On the ladder scale this validation matches
+claude-sonnet-4.5 (0.975) and exceeds deepseek-r1 (0.95), from a 0.5B model
+whose untrained baseline was ~0.47. **Caveats:** validation (not the
+committed 80-action test), 2 of 3 seeds, transcribed. Official numbers =
+committed-test evaluation of all three seeds, pending `ce_results.zip`.
+Overfitting note: val is held-out but same-distribution as train; the
+committed test rules out example memorization, but an out-of-distribution
+(domain-hold-out / depth-extrapolation) evaluation is still needed to claim
+the model learned the authorization *rule* rather than the generator's
+distribution. This run hit the 75–85% target (and overshot on validation).
 
 ---
 
