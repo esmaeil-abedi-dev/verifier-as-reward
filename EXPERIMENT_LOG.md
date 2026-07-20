@@ -40,6 +40,34 @@ added specifically to defeat surface-cue shortcuts (see §3).
 
 ---
 
+## 1b. IMPORTANT — there are TWO trained models, and why
+
+Same method (verifier cross-entropy from Qwen2.5-0.5B), **different training
+data on purpose.** Do not conflate them in the paper.
+
+| | **Released model** | **OOD model** |
+|---|---|---|
+| Hub / name | `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b` (seed 9) | `ckpt_ood_seed{7,8,9}` (not released by default) |
+| trained on | **all 5 domains** — `expanded_train.jsonl`, 2400 actions | **3 domains only** (email, payment, repo) — `ood_train.jsonl`, 2050 actions |
+| file/db seen in training? | **yes** | **no (held out)** |
+| used for | headline in-distribution result (0.983), train–test gap, fresh-unseen (0.978) | the OOD transfer test (0.970 on the held-out file/db domains) |
+
+**Why two models are required (not a mistake):** an out-of-distribution test
+is only valid if the test domains were *never seen in training*. The released
+model was trained on file/db, so evaluating **it** on file/db would be
+*in-distribution*, not OOD — it would prove nothing about transfer. To claim
+"generalizes to unseen domains" you must train a *separate* model **without**
+those domains (the OOD model) and then test it **on** them. That is exactly
+what Check 2 does; its `model=Qwen/Qwen2.5-0.5B, train_actions=2050` header
+confirms it starts from the base model and trains fresh on the 3-domain set.
+
+One-line memory aid: **released model = all domains (the product);
+OOD model = 3 domains (the experiment).** The 0.970 OOD number comes from the
+OOD model; the 0.975 / 0.978 in-distribution numbers come from the released
+model.
+
+---
+
 ## 2. Proof-of-life: frontier models vs. baselines (natural-language prompts)
 
 Source: `proofoflife_results.json`. 80 test actions, temperature 0. Headline =
@@ -248,10 +276,12 @@ memorization (Layers 1–2) and validation-tuning (fresh seed, never touched
 during training).
 
 **OUT-OF-DISTRIBUTION generalization — domain hold-out** (`colab_overfitting_checks.ipynb`
-Check 2; CE-trained on email/payment/repo, evaluated on the **file/db**
-domains whose actions (`file.read`, `db.query`) and resource formats
-(`file:/projects/…`, `db:…`) never appeared in training). Seed 7, held-out-
-domain accuracy over training (200-action eval subset; transcribed):
+Check 2). **This uses the OOD model, NOT the released model — see §1b for why
+two models exist.** CE-trained on email/payment/repo (2050 actions),
+evaluated on the **file/db** domains whose actions (`file.read`, `db.query`)
+and resource formats (`file:/projects/…`, `db:…`) never appeared in training.
+Seed 7, held-out-domain accuracy over training (200-action eval subset;
+transcribed):
 
 | step | 0 | 100 | 150 | 200 | 250 | 350 | 400 | 450 | 500 |
 |---|---|---|---|---|---|---|---|---|---|
