@@ -13,9 +13,19 @@ with the deterministic verifier's verdict (`label_action`) as the reward:
 The policy scores two candidate continuations (" AUTHORIZE" / " REFUSE") of a
 compact trace prompt by their length-normalized (mean per-token) sequence
 log-probability — normalization keeps the unequal candidate lengths from
-biasing the initial policy to one decision — samples a decision from the
-softmax over the two scores, and is updated by REINFORCE with a running-mean
-baseline.
+biasing the initial policy to one decision. Two objectives:
+
+  - default: sampled REINFORCE with a running-mean baseline (a decision is
+    sampled from the two-way softmax; high estimator variance — documented
+    to collapse into blanket policies at small scale);
+  - --exact-pg: the closed-form expected reward E[r] = pi(A)r(A)+pi(R)r(R),
+    computable because the verifier prices BOTH decisions; zero estimator
+    variance, deterministic per seed, corners unreachable by noise.
+
+Note a deliberate prompt-format split: training and validation curves use
+the compact prompt above, while --eval-checkpoint scores the natural-
+language eval_harness prompts (identical to the API-model ladder) — the
+two scales are not directly comparable and both should be reported.
 The loop is modular: `load_examples`, `reward_for_decision`, and
 `candidate_logprobs` are exactly the pieces a TRL/PPO trainer would reuse —
 swap the update rule without touching the reward path.
@@ -284,10 +294,12 @@ def train(args) -> list:
                      if args.balance_reward else None)
     if class_weights:
         print(f"class-balanced rewards: {class_weights}")
-    # Seeded shuffle before truncating: a plain [:n] slice of the trace-id-
-    # sorted list would silently drop whole scenario classes from the eval.
+    # Fixed-seed shuffle before truncating: a plain [:n] slice of the
+    # trace-id-sorted list would silently drop whole scenario classes, and
+    # shuffling by args.seed would monitor each seed on a different subset —
+    # a fixed eval seed keeps the curves comparable across training seeds.
     eval_examples = load_examples(args.test_file)
-    random.Random(args.seed).shuffle(eval_examples)
+    random.Random(0).shuffle(eval_examples)
     eval_examples = eval_examples[: args.eval_max_actions]
     print(f"device={device.type} model={args.model} "
           f"train_actions={len(train_examples)} eval_actions={len(eval_examples)}")

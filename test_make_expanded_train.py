@@ -95,10 +95,6 @@ def test_cli_end_to_end():
                 assert (1 if verify(act, chain, root).authorized else 0) \
                     == aj["label"]
         # determinism: rerun produces identical bytes
-        r2 = subprocess.run(cmd, capture_output=True, text=True, env=env)
-        assert r2.returncode == 0
-        assert open(out_train, "rb").read() == \
-            open(out_train, "rb").read()  # self-consistent read
         first = open(out_train).read()
         subprocess.run(cmd, capture_output=True, text=True, env=env)
         assert open(out_train).read() == first
