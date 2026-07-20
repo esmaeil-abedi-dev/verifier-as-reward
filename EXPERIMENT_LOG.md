@@ -183,7 +183,41 @@ either direction**. Zero *sampling* variance, but the same softmax-saturation
 trap as REINFORCE. Removing sampling noise is not enough; the loss itself must
 have a non-vanishing gradient when confidently wrong.
 
-### Arm E — verifier cross-entropy (`--ce-loss`) — RECOMMENDED, run pending
+### Arm E — verifier cross-entropy (`--ce-loss`) — THE RESULT (3 seeds, native CUDA)
+
+**FINAL committed-test result** (`benchmark_test.jsonl`, 80 actions, NL prompts,
+evaluated once per seed; native Colab CUDA; logs
+`training_log_qwen05b_ce_seed{7,8,9}.jsonl`, metrics `results_ce.json`):
+
+| seed | test accuracy | false-authorize (headline) | false-refuse | parse-fail |
+|---|---|---|---|---|
+| 7 | 0.988 | 0.023 | 0.000 | 0.000 |
+| 8 | 0.988 | 0.023 | 0.000 | 0.000 |
+| 9 | 0.975 | 0.045 | 0.000 | 0.000 |
+| **mean** | **0.983 ± 0.006** | **0.030 ± 0.011** | 0.000 | 0.000 |
+
+**Headline:** a 0.5B model, taught only by the deterministic verifier, reaches
+**0.983 committed-test accuracy** — above the heuristic floor (0.80),
+gemini-2.5-flash (0.875) and deepseek-r1 (0.95), level with claude-sonnet-4.5
+(0.975) — from an untrained baseline of ~0.47, with false-authorize 0.030 and
+false-refuse 0.000. Config: 3 seeds × 500 steps, batch 16, lr 2e-5, balanced
+reward, NL prompts. Figure: `learning_curve_all_objectives.png`.
+
+Per-class (seed 7): every class 1.00 except **chain_structure 0.90**
+(false-authorize 0.11) — the single hardest class, where llama-70B scored 0.30
+and llama-8b 0.10. The residual error is concentrated exactly where the
+frontier models also struggle, which is the expected place for it to be.
+
+**Caveat retained:** these are *in-distribution* numbers (train/val/test from
+one generator, leakage-checked). The train–test gap and domain-hold-out OOD
+checks (`colab_overfitting_checks.ipynb`) are the separate generalization
+experiments; they answer whether 0.983 reflects the learned *rule* vs. the
+generator's distribution. Do NOT report 0.983 as out-of-distribution
+generalization.
+
+---
+
+#### (superseded) preliminary validation record — kept for the trajectory
 
 Objective: −log π(verdict), the verifier verdict used as a target. Gradient is
 (π(verdict)−1), which stays strong (≈ −1) exactly when the model is confidently
@@ -272,9 +306,18 @@ fixing the cold-start exploration failure that sank Arms A–D.
   landed at false-authorize 1.0 (Arm D seed 7) — a reportable negative result.
 - The verifier signal is learnable (transient peaks 0.61–0.65 in every arm),
   but no sampled/exact-RL objective *holds* it.
-- **Verifier cross-entropy (Arm E)** is the objective with the correct gradient
-  geometry; its run is the pending headline experiment, with CE→RL refinement
-  as the follow-up that returns RL to the story.
+- **Verifier cross-entropy (Arm E) is the headline result: 0.983 ± 0.006
+  committed-test accuracy, false-authorize 0.030 ± 0.011, false-refuse 0.000,
+  across 3 seeds.** A 0.5B model taught only by the verifier reaches
+  claude-sonnet-4.5's accuracy (0.975) and beats every smaller/open model on
+  the ladder — from a ~0.47 untrained baseline. The one residual error is
+  `chain_structure` (0.90), the hardest class. This is in-distribution; the
+  OOD domain-hold-out check is the separate generalization experiment.
+- The paper's arc: pure verifier-RL fails at 0.5B by optimization pathology
+  (variance collapse A/B/C, gradient saturation D); the same verifier signal
+  used as a cross-entropy target (E) converges cleanly to near-frontier
+  accuracy. Next: CE→RL refinement (returns RL to the story) and the OOD /
+  train–test-gap generalization checks.
 
 ---
 
@@ -459,7 +502,10 @@ each diagnosed and fixed, before abandoning local training:
 | `training_log_qwen05b_exactpg_seed8` | native, Colab, **partial (≤step 25)** |
 | `results_exactpg.json` | native, seed-7 checkpoint on committed test |
 | `learning_curve.png` | generated from the naive+mitigated logs |
-| Arm E (CE) logs | **not yet produced** |
+| `training_log_qwen05b_ce_seed{7,8,9}` | native, Colab CUDA, full 500 steps |
+| `results_ce.json` | native, 3 CE checkpoints on committed test |
+| `learning_curve_all_objectives.png` | generated: all objectives + ladder refs |
+| OOD / train–test-gap logs | **not yet produced** (`colab_overfitting_checks.ipynb`) |
 
 Every native training log carries a first-line `config` record. Transcribed /
 partial logs carry a `_provenance` field. The committed `benchmark_test.jsonl`
