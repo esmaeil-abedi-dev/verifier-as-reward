@@ -215,6 +215,25 @@ experiments; they answer whether 0.983 reflects the learned *rule* vs. the
 generator's distribution. Do NOT report 0.983 as out-of-distribution
 generalization.
 
+**Train–test gap (example-memorization check)** — released seed-9 checkpoint
+scored on its own training set vs the committed test (`colab_overfitting_checks.ipynb`
+Check 1; transcribed from console):
+
+| set | n actions | accuracy | false-authorize | false-refuse |
+|---|---|---|---|---|
+| train (`expanded_train`) | 2400 | 0.986 | 0.014 | 0.014 |
+| committed test | 80 | 0.975 | 0.045 | 0.000 |
+| **gap** | — | **0.011** | — | — |
+
+A ~1-point train–test gap = **no example memorization**; the model performs
+almost identically on data it trained on and data it never saw. Stronger
+still: even on the *training* set the model only reaches **0.94 on
+`chain_structure`** (300 train examples) — it cannot perfectly fit its own
+hardest class, which a memorizing model would. It learned a genuine (bounded)
+rule, not a lookup table. (The committed test's `chain_structure` reads 0.80,
+but that is 8/10 on 10 actions — wide CI; the 300-action train and 960-action
+fresh-unseen sets put the class at 0.94 / 0.91, the reliable estimates.)
+
 **In-distribution generalization on FRESH unseen data** (released seed-9
 checkpoint `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b`, evaluated via
 `colab_eval_released.ipynb` on 960 actions generated from a NEW seed 999 and
