@@ -534,6 +534,67 @@ fixing the cold-start exploration failure that sank Arms A–D.
 
 ---
 
+## 8. Conclusions — one takeaway per experiment (for the paper's discussion)
+
+Each line is the claim that experiment supports, stated at the scope the data
+actually licenses (nothing over-claimed).
+
+1. **Benchmark is real and hard.** Frontier ladder: false-authorize falls
+   monotonically with capability (llama-8b 0.77 → sonnet 0.00); crucially both
+   Llama models are at/below an 80% lexical-shortcut floor. *Conclusion:*
+   authorization-over-delegation is not solved by scale alone, and the
+   benchmark isn't shortcut-solvable — a real target for a trained model.
+
+2. **Benchmark validity is defended.** A 3-rule lexical baseline hit 91% on
+   v1; after adding `chain_structure`, decoy grants, and inert timestamps it
+   drops to 80%. *Conclusion:* the reported gains reflect authorization
+   reasoning, not surface cues.
+
+3. **Naive verifier-RL fails by optimization pathology, not reward design.**
+   Sampled REINFORCE (A/B/C) collapses to a blanket policy; bigger batch (C)
+   makes it *worse* by removing the exploration noise that was its only escape.
+   *Conclusion:* variance, not the reward, is the enemy for sampled RL here.
+
+4. **Removing sampling variance is necessary but not sufficient.** Exact
+   expected-reward policy gradient (D) has zero sampling variance yet
+   oscillates and ends at false-authorize 1.0, because its gradient ∝ π(A)π(R)
+   *saturates at the corners*. *Conclusion:* the loss must have a
+   non-vanishing gradient when the model is confidently wrong.
+
+5. **Verifier cross-entropy is the fix, and it works.** CE (E) converges
+   monotonically to **0.983 ± 0.006** committed-test accuracy, false-authorize
+   0.030, across 3 seeds — matching claude-sonnet-4.5 and beating every
+   smaller/open model on the ladder, from a 0.5B model. *Conclusion:* the
+   verifier's verdict, used as a *target* (non-saturating gradient) rather than
+   a scalar reward, is the effective way to learn from it at this scale.
+
+6. **It is not overfitting (three independent checks).** Train–test gap ~1pp;
+   the model can't even fit its hardest class on train (0.94 ⇒ not a lookup
+   table); 0.978 on 960 freshly generated actions. *Conclusion:* the accuracy
+   reflects a learned rule generalizing in-distribution, not memorization.
+
+7. **It transfers out of distribution.** Domain hold-out (train 3 domains,
+   test 2 unseen): **0.968 ± 0.001**, train→OOD gap **~1.5pp**. Zero-shot on
+   six *invented* domains (deployed model, no retraining): **0.972–0.978**.
+   *Conclusion:* the model learned domain-invariant authorization *structure*,
+   transferring across vocabulary — **within the delegation formalism** (scope
+   caveat, §1a); cross-formalism generality is future work.
+
+8. **The consistent soft spot is `chain_structure`.** ~0.87–0.91 everywhere
+   (in-distribution, OOD, novel-domain, and even on the OOD model's *own*
+   training data). *Conclusion:* multi-hop structural reasoning is the
+   residual hard case — a clean limitation to state, and it doubles as
+   evidence against memorization (never perfectly fit, even on seen data).
+
+**Overall thesis supported:** a deterministic authorization verifier can serve
+as both a benchmark label *and* a training signal; used as a cross-entropy
+target it trains a 0.5B model to near-frontier, non-memorizing, domain-
+transferring authorization judgment — while naive RL uses of the same signal
+fail by well-characterized optimization pathologies (the paper's cautionary
+methods contribution).
+
+---
+
 # APPENDIX A — Full chronological detail (every step, command, failure, fix)
 
 This appendix records the work at the granularity needed to reproduce or audit
