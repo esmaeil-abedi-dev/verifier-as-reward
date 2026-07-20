@@ -176,6 +176,17 @@ def load_traces(path: str) -> list:
         return [json.loads(line) for line in f if line.strip()]
 
 
+def trace_domain(trace: dict) -> str:
+    """The single domain a trace belongs to (email/payment/repo/file/db),
+    read from its first action's namespace prefix. Every generated trace is
+    single-domain, so this is well-defined."""
+    return trace["actions"][0]["action"].split(".")[0]
+
+
+def corpus_domains_present(traces: list) -> set:
+    return {trace_domain(tr) for tr in traces}
+
+
 # --------------------------------------------------------------------------
 # Scenario vocabulary
 # --------------------------------------------------------------------------

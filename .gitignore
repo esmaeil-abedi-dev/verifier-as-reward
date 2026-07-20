@@ -8,3 +8,5 @@ expanded_train.jsonl
 expanded_val.jsonl
 ._*
 training_log.jsonl
+ood_train.jsonl
+ood_test.jsonl
