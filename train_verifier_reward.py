@@ -546,6 +546,9 @@ def main() -> None:
                          "existing proof-of-life results file")
     args = ap.parse_args()
 
+    if args.ce_loss and args.exact_pg:
+        ap.error("--ce-loss and --exact-pg are mutually exclusive objectives")
+
     if args.eval_checkpoint:
         eval_checkpoint(args.eval_checkpoint, args.test_file,
                         pick_device(args.device), args.merge_results)

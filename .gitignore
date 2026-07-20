@@ -7,3 +7,4 @@ training_log_*.jsonl.tmp
 expanded_train.jsonl
 expanded_val.jsonl
 ._*
+training_log.jsonl

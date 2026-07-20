@@ -145,20 +145,35 @@ out = run_eval(my_model, load_traces("benchmark_test.jsonl"))
 print_summary("my-model", out["metrics"])
 ```
 
-**Training objectives and data discipline.** The harness supports sampled
-REINFORCE (default; high variance — collapses into blanket policies at
-small scale, a documented baseline result) and `--exact-pg`, the
-closed-form expected-reward objective: with two decisions and the verifier
-able to price both, E[r] is computable exactly, removing the sampling
-estimator entirely. For scaled-up training, `make_expanded_train.py`
+**Training objectives.** Three, in increasing effectiveness — a study in
+how to use a verifier's verdict as a learning signal:
+
+1. sampled REINFORCE (default) — the verdict as a ±1 scalar reward; high
+   estimator variance, collapses into blanket always-refuse/always-authorize
+   policies at small scale (a documented baseline failure);
+2. `--exact-pg` — the closed-form expected reward E[r]=π(A)r(A)+π(R)r(R)
+   (the verifier prices both decisions); removes sampling variance but its
+   gradient ∝ π(A)π(R) saturates at the corners, so it oscillates rather
+   than converging (documented ablation);
+3. `--ce-loss` (recommended) — the verdict as a cross-entropy target,
+   `−log π(verdict)`; the gradient stays strong when the model is
+   confidently wrong, so it converges cleanly. Still verifier-only
+   supervision (the live `label_action` verdict is the sole signal, never
+   the stored corpus label) — the verdict used as a target rather than a
+   scalar reward.
+
+Use `--prompt-style nl` to train on the natural-language ladder prompts so
+training and final checkpoint evaluation share a format (the fair
+0.5B-vs-frontier comparison).
+
+**Data discipline.** For scaled-up training, `make_expanded_train.py`
 generates an expanded train corpus and a separate validation corpus from
 fresh seeds, deduplicated against the committed `benchmark_test.jsonl` at
 the (root, chain, action) decision-context level; the committed test set
-is reserved for one final report. Two caveats to disclose alongside
-results: training/validation curves use the compact prompt while final
-checkpoint evaluation uses the natural-language ladder prompts (the two
-scales differ), and the 80-action test set carries a ~±10pp 95% CI on
-accuracy.
+is reserved for one final report. Disclose alongside results that the
+80-action test set carries a ~±10pp 95% CI on accuracy. `colab_ce_final.ipynb`
+runs the full recommended experiment (CE + NL prompts + balanced reward,
+3 seeds, val-monitored, one committed-test evaluation).
 
 **Training at scale** (GPU):
 
