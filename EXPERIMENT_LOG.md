@@ -344,10 +344,26 @@ scope_escalation 0.966, resource_violation 0.962, attack_confused_deputy
 Trajectory: violation rate drops first (the "when to refuse" logic transfers
 early), false-refuse falls later (the model is initially cautious about
 authorizing unseen resource formats, then generalizes the authorize side).
-(OOD train-vs-held-out gap: the eval cell also prints each checkpoint's
-accuracy on its own training domains; those lines were not merged into
-`results_ood.json`, so the exact gap number is not captured here — but the
-held-out 0.968 vs the in-distribution ~0.98 bounds it at ~1–2pp.)
+**OOD gap (train-domain vs held-out-domain accuracy of the SAME OOD model;
+transcribed from console):**
+
+| seed | train (email/payment/repo) | held-out (file/db) | gap |
+|---|---|---|---|
+| 7 | 0.985 | 0.968 | 0.017 |
+| 8 | 0.985 | 0.970 | 0.015 |
+| 9 | 0.980 | 0.967 | 0.013 |
+| **mean** | **0.983** | **0.968** | **0.015 (~1.5pp)** |
+
+A **~1.5-point** drop from training domains to entirely unseen domains — the
+model performs almost as well on file/db (never trained) as on
+email/payment/repo (trained). This tightly quantifies the transfer claim.
+Note two things that reinforce the no-memorization story for the OOD model
+too: (i) even on its own *training* domains it only reaches ~0.90 on
+`chain_structure` (seed 7 train 0.898, seed 8 0.902, seed 9 0.898) — it
+cannot perfectly fit its hardest class on seen data, so it is not a lookup
+table; (ii) the held-out drop is concentrated in the two structurally hardest
+classes (`chain_structure` ~0.87, `scope_escalation` 0.90–0.97), while
+revocation/expiry/resource/single/multi transfer at ~1.00.
 
 **ZERO-SHOT on BRAND-NEW domains — the deployed model, no retraining**
 (`make_novel_domain.py` → `--eval-checkpoint`). The **released all-domains
@@ -745,9 +761,8 @@ corpora and logs, `ckpt_*` checkpoints, `.env`, the released weights (HF Hub).
 
 ## A.11 Open / pending items (nothing lost — just not yet run)
 
-- OOD domain-hold-out: **DONE** — 3 seeds, 0.968 ± 0.001 on the full
-  1150-action held-out set. (Only the exact train-vs-held-out gap number was
-  not merged into the results JSON; bounded ~1–2pp.)
+- OOD domain-hold-out: **DONE** — 3 seeds, 0.968 ± 0.001 held-out; train-vs-
+  held-out gap **~1.5pp** (train 0.983, held-out 0.968).
 - **CE→RL refinement** (returns RL to the story; warm-start then RL with a KL
   anchor) — designed in `RELATED_WORK_AND_DIRECTIONS.md`, not yet run.
 - **Method-generality across formalisms** (a 2nd verifier, e.g. RBAC) — future
