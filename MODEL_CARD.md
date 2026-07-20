@@ -41,6 +41,30 @@ hand-assigned or stored label.
 - **Recipe:** class-balanced reward weighting, natural-language prompts,
   full-parameter fine-tuning.
 
+## Evaluation
+
+Committed held-out test set (`benchmark_test.jsonl`, 80 actions,
+natural-language prompts, evaluated once). Three training seeds:
+
+| seed | accuracy | false-authorize (headline) | false-refuse |
+|---|---|---|---|
+| 7 | 0.988 | 0.023 | 0.000 |
+| 8 | 0.988 | 0.023 | 0.000 |
+| **9 (released weights)** | **0.975** | **0.045** | **0.000** |
+| mean | 0.983 ± 0.006 | 0.030 ± 0.011 | 0.000 |
+
+The **weights in this repository are the seed-9 checkpoint** (committed-test
+accuracy 0.975; seeds 7/8 reached 0.988). For calibration, on the identical
+prompts and metric: claude-sonnet-4.5 0.975, deepseek-r1 0.95,
+gemini-2.5-flash 0.875, a lexical heuristic floor 0.80, llama-3.3-70b 0.775,
+untrained baseline ~0.47. The only imperfect class is `chain_structure`
+(0.90) — the hardest structural-reasoning class.
+
+**These are in-distribution results** (train/validation/test drawn from one
+generator, deduplicated at the decision-context level). They do not by
+themselves establish out-of-distribution generalization; see the
+repository's domain-hold-out experiment.
+
 ## Intended use and limitations
 
 - **Research artifact**, not a production authorization system. The verifier
