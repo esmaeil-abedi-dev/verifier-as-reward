@@ -65,7 +65,7 @@ def _args(**over):
                 train_file=TRAIN_PATH, test_file=TEST_PATH, eval_every=1,
                 eval_max_actions=8, device="cpu", save_dir=None,
                 clip_grad_norm=1.0, entropy_beta=0.0, balance_reward=False,
-                exact_pg=False,
+                exact_pg=False, ce_loss=False, prompt_style="compact",
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
@@ -287,6 +287,62 @@ def test_exact_pg_increases_expected_reward():
     rewards = [p["mean_reward"] for p in h[1:]]
     first, last = sum(rewards[:3]) / 3, sum(rewards[-3:]) / 3
     assert last > first, f"expected reward did not rise: {first} -> {last}"
+
+
+# --- verifier cross-entropy: converges where exact-PG saturates ------------
+
+def test_ce_loss_drives_train_accuracy_up():
+    # CE's non-saturating gradient should let the tiny model FIT the small
+    # training corpus — the property exact-PG lacks. Check greedy training
+    # accuracy rises substantially over a short high-lr run.
+    from authority_verifier import label_action
+
+    def train_acc(model, tok, exs):
+        correct = 0
+        for ex in exs:
+            with torch.no_grad():
+                lps = candidate_logprobs(model, tok, ex["prompt"], DEVICE)
+            dec = 1 if int(torch.argmax(lps)) == 0 else 0
+            correct += int(dec == label_action(ex["action"], ex["chain"],
+                                               ex["root"]))
+        return correct / len(exs)
+
+    torch.manual_seed(0)
+    model, tok = build_model_and_tokenizer("tiny", seed=0)
+    model.to(DEVICE)
+    exs = load_examples(TRAIN_PATH)
+    before = train_acc(model, tok, exs)
+    opt = torch.optim.AdamW(model.parameters(), lr=5e-3)
+    from authority_verifier import label_action as la
+    for _ in range(40):
+        opt.zero_grad()
+        for ex in exs:
+            lps = candidate_logprobs(model, tok, ex["prompt"], DEVICE)
+            tgt = 0 if la(ex["action"], ex["chain"], ex["root"]) == 1 else 1
+            loss = -torch.log_softmax(lps, dim=0)[tgt] / len(exs)
+            loss.backward()
+        opt.step()
+    after = train_acc(model, tok, exs)
+    assert after > before + 0.2, f"CE did not fit train: {before} -> {after}"
+    assert after >= 0.85, f"CE should nearly fit the tiny corpus: {after}"
+
+
+def test_ce_loss_flag_runs_and_deterministic():
+    h1 = train(_args(ce_loss=True, balance_reward=True,
+                     log_file=os.path.join(_TMP.name, "ce1.jsonl")))
+    h2 = train(_args(ce_loss=True, balance_reward=True,
+                     log_file=os.path.join(_TMP.name, "ce2.jsonl")))
+    assert h1 == h2
+
+
+def test_nl_prompt_style():
+    compact = load_examples(TEST_PATH, "compact")
+    nl = load_examples(TEST_PATH, "nl")
+    assert len(compact) == len(nl)
+    # NL prompts are the eval_harness ones (longer, natural language)
+    assert nl[0]["prompt"] != compact[0]["prompt"]
+    assert "authorization auditor" in nl[0]["prompt"]
+    assert compact[0]["prompt"].startswith("ROOT ")
 
 
 # --- checkpoint ladder-row evaluation (offline, tiny model) ----------------

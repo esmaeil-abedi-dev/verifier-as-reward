@@ -160,15 +160,25 @@ def compact_prompt(trace: dict, action: dict) -> str:
     return "\n".join(lines)
 
 
-def load_examples(path: str) -> list:
+def load_examples(path: str, prompt_style: str = "compact") -> list:
     """One example per action: the prompt plus the verifier objects needed to
-    compute the reward at decision time."""
+    compute the reward at decision time.
+
+    prompt_style="nl" renders the natural-language eval_harness prompt (the
+    exact one the API-model ladder is scored on) instead of the terse
+    compact prompt, so training and the final ladder evaluation share a
+    format and the comparison is apples-to-apples."""
+    build = None
+    if prompt_style == "nl":
+        from eval_harness import build_prompt as build
+    elif prompt_style != "compact":
+        raise ValueError(f"unknown prompt_style {prompt_style!r}")
     examples = []
     for tr in load_traces(path):
         root, chain, actions = trace_to_objects(tr)
         for act, aj in zip(actions, tr["actions"]):
             examples.append({
-                "prompt": compact_prompt(tr, aj),
+                "prompt": build(tr, aj) if build else compact_prompt(tr, aj),
                 "action": act,
                 "chain": chain,
                 "root": root,
@@ -289,7 +299,7 @@ def train(args) -> list:
     model.train()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
-    train_examples = load_examples(args.train_file)
+    train_examples = load_examples(args.train_file, args.prompt_style)
     class_weights = (compute_class_weights(train_examples)
                      if args.balance_reward else None)
     if class_weights:
@@ -298,7 +308,7 @@ def train(args) -> list:
     # trace-id-sorted list would silently drop whole scenario classes, and
     # shuffling by args.seed would monitor each seed on a different subset —
     # a fixed eval seed keeps the curves comparable across training seeds.
-    eval_examples = load_examples(args.test_file)
+    eval_examples = load_examples(args.test_file, args.prompt_style)
     random.Random(0).shuffle(eval_examples)
     eval_examples = eval_examples[: args.eval_max_actions]
     print(f"device={device.type} model={args.model} "
@@ -349,15 +359,39 @@ def train(args) -> list:
                         "skip guards enabled)")
                 raise RuntimeError(f"non-finite candidate scores at step "
                                    f"{step}: {lps.tolist()}")
+            if args.ce_loss:
+                # Verifier cross-entropy: the verdict is the target decision
+                # and the loss is -log pi(target). Its gradient is
+                # (pi(target) - 1) — which stays STRONG when the model is
+                # confidently wrong, unlike the expected-reward objective
+                # whose gradient ~ pi(A)pi(R) vanishes at the corners and
+                # merely oscillates. Still verifier-only: label_action is
+                # the sole supervision, never the stored corpus label. This
+                # is the verifier signal used as a target rather than a
+                # scalar reward (reward-argmax imitation).
+                verdict = label_action(ex["action"], ex["chain"], ex["root"])
+                target_idx = 0 if verdict == 1 else 1  # idx 0 = AUTHORIZE
+                logp = torch.log_softmax(lps, dim=0)
+                w = class_weights[verdict] if class_weights else 1.0
+                loss = -w * logp[target_idx] / len(batch)
+                loss.backward()
+                step_loss += loss.detach()
+                with torch.no_grad():
+                    pr = torch.softmax(lps, dim=0)
+                    exp_r = (pr[0] * reward_for_decision(1, ex, class_weights)
+                             + pr[1] * reward_for_decision(0, ex, class_weights))
+                rewards.append(float(exp_r))
+                continue
             if args.exact_pg:
                 # Exact two-action policy gradient: with only two decisions
                 # and the verifier able to price BOTH (label_action depends
                 # only on the verdict), the expected reward E[r] =
                 # pi(A)*r(A) + pi(R)*r(R) is computable in closed form.
                 # Maximizing it directly is the zero-variance version of
-                # REINFORCE — the sampling estimator's noise (which drove
-                # the corner collapses) is removed entirely, and both
-                # decisions contribute gradient at every step.
+                # REINFORCE. NOTE: its gradient ~ pi(A)pi(R) saturates at the
+                # corners, so it oscillates rather than converging — use
+                # --ce-loss for reliable convergence; this mode is kept as
+                # the documented ablation.
                 probs_g = torch.softmax(lps, dim=0)
                 r_auth = reward_for_decision(1, ex, class_weights)
                 r_ref = reward_for_decision(0, ex, class_weights)
@@ -480,10 +514,17 @@ def main() -> None:
                          "verifier's verdicts (removes the majority-class "
                          "always-refuse attractor)")
     ap.add_argument("--exact-pg", action="store_true",
-                    help="closed-form expected-reward objective over the two "
-                         "decisions (the verifier prices both arms) instead "
-                         "of sampled REINFORCE: zero estimator variance, no "
-                         "corner collapse")
+                    help="closed-form expected-reward objective (ablation): "
+                         "zero sampling variance but a corner-saturating "
+                         "gradient, so it oscillates — prefer --ce-loss")
+    ap.add_argument("--ce-loss", action="store_true",
+                    help="verifier cross-entropy: train -log pi(verdict). "
+                         "Non-saturating gradient, converges cleanly. The "
+                         "recommended objective for real accuracy.")
+    ap.add_argument("--prompt-style", default="compact",
+                    choices=("compact", "nl"),
+                    help="'nl' trains on the natural-language ladder prompts "
+                         "so training and final ladder eval share a format")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--train-file", default="benchmark_train.jsonl")
     ap.add_argument("--test-file", default="benchmark_test.jsonl")
