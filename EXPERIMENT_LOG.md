@@ -685,8 +685,57 @@ each diagnosed and fixed, before abandoning local training:
 | `training_log_qwen05b_ce_seed{7,8,9}` | native, Colab CUDA, full 500 steps |
 | `results_ce.json` | native, 3 CE checkpoints on committed test |
 | `learning_curve_all_objectives.png` | generated: all objectives + ladder refs |
-| OOD / train–test-gap logs | **not yet produced** (`colab_overfitting_checks.ipynb`) |
+| CE seed-7/8 val curves (0.983) | **transcribed from console** (preliminary block) |
+| train–test gap (train 0.986 / test 0.975) | **transcribed from console**, released model via `colab_overfitting_checks.ipynb` Check 1 |
+| fresh-unseen 0.978 (960 actions, seed 999) | **transcribed from console**, `colab_eval_released.ipynb` |
+| OOD domain-hold-out (seed 7, 0.970) | **transcribed from console**, seed-7 only + 200-action subset; seeds 8/9 + full 1150 pending zip |
+| zero-shot novel domains: 0.978 (calendar/cloud), 0.972 (6 domains) | **native, local Apple MPS** forward-only eval of the deployed model |
+| released model `esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b` | HF Hub, seed-9 CE checkpoint (fp16); NOT in git (weights on Hub) |
+| `overfitting_checks.zip` (full OOD 3-seed + gap) | **not yet produced** (finish `colab_overfitting_checks.ipynb`) |
 
 Every native training log carries a first-line `config` record. Transcribed /
 partial logs carry a `_provenance` field. The committed `benchmark_test.jsonl`
 was evaluated once per method and never regenerated.
+
+## A.10 Repository manifest (every module, notebook, doc)
+
+**Core code (each with a `test_*.py`; test counts at last audit — 19/17/23/21/3/8):**
+- `authority_verifier.py` — given, trusted verifier (ground truth). *test: 19*
+- `trace_benchmark.py` — benchmark generator, 9 classes, 5 domains. *test: 17*
+- `eval_harness.py` — proof-of-life evaluator + OpenRouter backend. *test: 23*
+- `train_verifier_reward.py` — training harness (REINFORCE / exact-PG / CE),
+  checkpoint eval, prompt styles. *test: 21*
+- `make_expanded_train.py` — leakage-guarded expanded train + val corpora. *test: 3*
+- `make_ood_split.py` — domain-hold-out OOD split (file/db). *test (with novel): via make_ood_split — 4*
+- `make_novel_domain.py` — zero-shot novel-domain test sets (6-domain pool). *test: 8*
+
+**Colab notebooks:**
+- `colab_training.ipynb` — Arms A/B (naive + mitigated REINFORCE)
+- `colab_exactpg.ipynb` — Arm D (exact-PG) + expanded corpus
+- `colab_ce_final.ipynb` — Arm E (CE) + HF Hub release cells
+- `colab_overfitting_checks.ipynb` — Check 1 (train-test gap) + Check 2 (OOD)
+- `colab_eval_released.ipynb` — eval deployed model on committed + fresh-unseen
+
+**Docs:**
+- `README.md` — overview, run commands, objectives, released model
+- `DATASHEET.md` — benchmark datasheet (generated)
+- `MODEL_CARD.md` — HF Hub model card (eval table, released = seed 9)
+- `RELEASE_HOWTO.md` — copy-paste cells to push a checkpoint to the Hub
+- `RELATED_WORK_AND_DIRECTIONS.md` — 6 sources (fetched/read) + CE→RL recipe
+- `EXPERIMENT_LOG.md` — this file
+
+**Gitignored (regenerable from seeds, or hosted elsewhere):** all `*.jsonl`
+corpora and logs, `ckpt_*` checkpoints, `.env`, the released weights (HF Hub).
+
+## A.11 Open / pending items (nothing lost — just not yet run)
+
+- OOD domain-hold-out: **seeds 8/9** and the **full 1150-action** number +
+  the OOD train-vs-held-out **gap** (`overfitting_checks.zip`). Seed 7 = 0.970.
+- CE **seeds 8/9 committed-test** are done (0.988/0.975); only the OOD seeds
+  8/9 remain.
+- **CE→RL refinement** (returns RL to the story; warm-start then RL with a KL
+  anchor) — designed in `RELATED_WORK_AND_DIRECTIONS.md`, not yet run.
+- **Method-generality across formalisms** (a 2nd verifier, e.g. RBAC) — future
+  work per §1a; not started.
+- Optional: release the OOD 3-domain model as a 2nd Hub repo; enlarge the
+  80-action committed test for a tighter CI on the headline.
