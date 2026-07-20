@@ -248,3 +248,192 @@ fixing the cold-start exploration failure that sank Arms A–D.
 - **Verifier cross-entropy (Arm E)** is the objective with the correct gradient
   geometry; its run is the pending headline experiment, with CE→RL refinement
   as the follow-up that returns RL to the story.
+
+---
+
+# APPENDIX A — Full chronological detail (every step, command, failure, fix)
+
+This appendix records the work at the granularity needed to reproduce or audit
+it: exact commands, hyperparameters, formulas, failure tracebacks, and the fix
+for each. Ordered by commit. Commit hashes are in `git log`.
+
+## A.0 Exact objective formulas (as implemented in `train_verifier_reward.py`)
+
+Policy over the two decisions, from length-normalized candidate log-probs:
+```
+s_A = (1/|A_tok|) Σ_j log p(A_tok[j] | prompt, A_tok[<j])     # " AUTHORIZE"
+s_R = (1/|R_tok|) Σ_j log p(R_tok[j] | prompt, R_tok[<j])     # " REFUSE"
+π = softmax([s_A, s_R])          # π[0]=P(AUTHORIZE), π[1]=P(REFUSE)
+```
+Length-normalization matters: " AUTHORIZE" and " REFUSE" tokenize to different
+lengths; unnormalized sequence log-probs bias the untrained policy ~fully to
+the shorter candidate (measured P(AUTHORIZE) ≈ 5e-8 without normalization).
+
+Reward (sole source = live verifier verdict v = `label_action(...)`):
+```
+reward_for_decision(d) = +1 if d == v else −1
+with --balance-reward:  reward *= class_weights[v],
+    class_weights = {0: N/(2·N0), 1: N/(2·N1)}   # inverse frequency
+```
+Objectives:
+```
+REINFORCE (default):   loss = −(r − b)·log π(d_sampled),  d_sampled ~ π
+                       b ← 0.9·b + 0.1·mean_batch_reward   (running baseline)
+exact-PG (--exact-pg): loss = −E[r] = −(π[0]·r_A + π[1]·r_R)
+CE (--ce-loss):        loss = −w·log π(target),  target = 0 if v==1 else 1
+optional entropy:      loss −= β·H(π)          (--entropy-beta)
+grad clip 1.0 per step; per-example backward with gradient accumulation.
+```
+Gradient geometry (why D fails, E works), for correct decision = AUTHORIZE,
+z = s_A − s_R, π(A) = σ(z):
+```
+exact-PG:  dE[r]/dz = 2·π(A)·π(R)   → 0 as π(A)→0 or →1  (SATURATES)
+CE:        d(−log π(A))/dz = π(A) − 1 → −1 as π(A)→0     (STAYS STRONG)
+```
+Measured on the tiny model at a confidently-wrong state (π(A)≈0.9998, correct=R):
+CE param-grad norm ≈ 5.31 vs exact-PG ≈ 0.0022 — ratio ~2400×.
+
+## A.1 Benchmark + harness build (commit dbf2cc7)
+
+- Generated corpus: `python3 trace_benchmark.py --seed 7 --traces-per-class 25`.
+- First corpus had **8** classes; a 3-rule lexical baseline hit **91.4%** on it
+  → benchmark not measuring authorization reasoning.
+- Fix (df149f8): added 9th class `chain_structure` (4 variants: broken_link,
+  wrong_root, wrong_agent, pre_issue), decoy grants (~50% of chains, an
+  action-mismatched grant that never flips a label — verified 0 flips over all
+  400 actions), inert validity windows on authorized traces. Same shortcut now
+  ships as the `heuristic` eval backend → drops to 80%.
+- Three adversarial review rounds (f8413ab, df149f8, 1f0ad79) before the model
+  work. Test count grew 44 → 63 → (later) 83.
+
+## A.2 Proof-of-life ladder (commits 932fdcb, 037349f, 502011b)
+
+- Built OpenRouter backend `make_openrouter_backend(model_id, api_key,
+  temperature=0.0, timeout=120, max_retries=4)`: single user message, temp 0,
+  exponential backoff on 429/5xx and HTTP-200 error bodies, raise-after-retries
+  (→ run_eval records a parse failure = safe non-authorizing outcome).
+- Config via env / `.env` (gitignored): `OPENROUTER_API_KEY`, `*_MODEL` vars.
+- Command: `PYTHONPATH=. python3 eval_harness.py --ladder`.
+- Model IDs verified live against `https://openrouter.ai/api/v1/models`:
+  meta-llama/llama-3.1-8b-instruct, meta-llama/llama-3.3-70b-instruct,
+  google/gemini-2.5-flash, anthropic/claude-sonnet-4.5, deepseek/deepseek-r1.
+- 5 models × 80 actions = 400 calls, temp 0. Results in §2 of the main log.
+  One attributable empty-content reply from deepseek-r1 (its reasoning burned
+  the token budget) → handled as a diagnostic parse failure.
+
+## A.3 Training-harness prep (commits e64be5e, d8a9e30)
+
+- Per-example backward + gradient accumulation (not a stacked batch loss):
+  same gradient, but each autograd graph is freed immediately — a full batch of
+  0.5B graphs would exhaust 16 GB. Verified gradient-equivalent to the stacked
+  form (cosine 1.0).
+- `--save-dir` (HF `save_pretrained`), first log line = config record (argv,
+  args, device), `--device` (auto picks cuda-else-cpu; mps must be explicit).
+- Review-driven memory fix: slice logits to the candidate positions *before* the
+  fp32 log-softmax — a full seq × 152k-vocab log-softmax in the graph costs
+  hundreds of MB/forward for Qwen. Trajectory unchanged (byte-identical log).
+
+## A.4 Local MPS attempts and the failure cascade (commits 0f7cb70, 243ef64, b48ecb1)
+
+Hardware: Apple M2, 16 GB unified memory, MPS backend. Three distinct failures,
+each diagnosed and fixed, before abandoning local training:
+
+1. **Tokenizer-less checkpoint bug** (0f7cb70): a saved tiny checkpoint has no
+   tokenizer files; `AutoTokenizer` on that dir mis-encodes to empty ids →
+   `RuntimeError: cannot reshape tensor of 0 elements`. Fix: fall back to the
+   byte tokenizer when `tokenizer_config.json` is absent.
+2. **MPS out-of-memory** (during backward): `MPS backend out of memory (MPS
+   allocated 8.14 GiB, other allocations 11.95 GiB, max 20.13 GiB)`. Desktop
+   apps held ~12 GB of the Metal budget; training needed ~8 GB. Mitigation:
+   `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0` to let macOS page instead of aborting.
+3. **NaN gradients on MPS** (243ef64): the fused SDPA attention *backward* kernel
+   produces **all-NaN gradients on the very first backward** for Qwen on Apple
+   silicon (`torch.multinomial: probability tensor contains inf/nan`). Diagnosed
+   by instrumenting: `params with NaN/inf: 290` after one step. Fix: force
+   `attn_implementation="eager"` whenever device==mps (finite grads: norms
+   112 → 14 → 15). Added `--clip-grad-norm 1.0`.
+4. **Silent MPS NaN under memory pressure** (b48ecb1): even with eager attention,
+   with the watermark disabled the kernels occasionally emit NaN *silently* right
+   after an 80-forward eval sweep. Guards added: `torch.mps.empty_cache()` after
+   eval; a per-step skip-guard that drops any step with non-finite gradients
+   (counted as `nan_steps_skipped`) and aborts if weights are ever poisoned. A
+   25-step guarded probe (without the big eval) ran clean.
+- **Every one of the 6 later CUDA runs had `nan_steps_skipped == 0`**, confirming
+  the NaN issue was MPS-specific hardware, not our math.
+
+## A.5 Arm A/B naive + mitigated (commits 710a296, 9904a41, b6ead85)
+
+- Collapse mitigations added: `--entropy-beta` (entropy bonus vs corner
+  collapse) and `--balance-reward` (inverse-frequency class weights vs the
+  55.3%-unauthorized majority payoff of +0.11 that makes always-refuse pay).
+- Ran on Colab T4 (`colab_training.ipynb`), 2 arms × 3 seeds × 400 steps,
+  batch 8, lr 1e-5, eval-every 20, eval-max-actions 80. Guardrail
+  `test_authority_verifier.py` (19/19) run first on the GPU box.
+- Full per-seed numbers in §4 (Arms A, B). Aggregated figure: `learning_curve.png`.
+- Command per seed (Arm A):
+  `python train_verifier_reward.py --model Qwen/Qwen2.5-0.5B --steps 400
+   --batch-size 8 --lr 1e-5 --eval-every 20 --eval-max-actions 80 --seed $s
+   --log-file training_log_qwen05b_naive_seed$s.jsonl --save-dir ckpt_naive_seed$s`
+  (Arm B adds `--entropy-beta 0.01 --balance-reward`).
+
+## A.6 Arm C tuned (commit 3f03dea)
+
+- Hypothesis (from user): larger batch reduces the see-saw variance. Config:
+  batch 32, entropy 0.03, balanced, sampled REINFORCE, 200 steps, eval-every 10.
+- Result: **total collapse**, 200 steps pinned at always-refuse. Interpretation:
+  batch 32 averages out the lucky-batch noise that was Arm A's only escape route
+  → lower-variance sampled RL is *more* trapped. Session disconnected before zip
+  download; seed-7 log transcribed from console with a `_provenance` marker;
+  `loss`/`nan_steps_skipped` null (not in console stream).
+
+## A.7 Exact-PG + leakage-guarded expanded corpus (commits 87bdfc7, df32042, ebd268a)
+
+- `--exact-pg`: closed-form E[r], derived above. Reviewer confirmed the loss
+  gradient equals the analytic expected-reward gradient (cosine 1.0000000 vs
+  5000 sampled REINFORCE gradients).
+- `make_expanded_train.py`: expanded train (seed 101, ~2400 actions) + validation
+  (seed 202, ~400 actions), deduplicated against the committed test set at the
+  (root, chain, action) canonical level. Post-conditions assert zero cross-set
+  overlap; guard proven to fire on planted collisions; measured near-duplicate
+  contamination of the test set 0/80.
+  Command: `python3 make_expanded_train.py --train-seed 101
+   --train-traces-per-class 150 --val-seed 202 --val-traces-per-class 25`.
+- Arm D run (`colab_exactpg.ipynb`): batch 16, lr 1e-5, 400 steps, val-monitored.
+  Command: `... --exact-pg --balance-reward --train-file expanded_train.jsonl
+   --test-file expanded_val.jsonl --eval-every 25 --eval-max-actions 120 ...`.
+- Seed-7 full trajectory (val accuracy): 0.517 → 0.400 (always-authorize corner,
+  step 75) → 0.55–0.59 oscillation → 0.592 (step 400). Seed 8 stopped at step 25
+  (always-authorize). Final seed-7 checkpoint on committed test (NL, once):
+  acc 0.450, false-authorize 1.000 — the dangerous corner. See §4 Arm D.
+
+## A.8 Verifier cross-entropy + NL prompts (commits 6d14fd5, 1147657)
+
+- `--ce-loss`: `−log π(verdict)`, non-saturating gradient (derivation in A.0).
+  Verified: fits ≥85% of the tiny training corpus where exact-PG could not;
+  deterministic per seed; class weights flow into the target weight.
+- `--prompt-style nl`: train on the eval_harness natural-language prompts (byte-
+  identical to what the ladder + `--eval-checkpoint` feed), removing the
+  train(compact)/eval(NL) domain shift. Verified no label leakage in NL prompts;
+  4-hop NL prompt ≈ 532 tokens ≪ Qwen 32k context.
+- `--ce-loss` and `--exact-pg` made mutually exclusive (argparse error).
+- Notebook `colab_ce_final.ipynb`: CE + NL + balanced, 3 seeds × 500 steps,
+  batch 16, lr 2e-5, eval-every 50, val-monitored, ONE committed-test eval per
+  seed via `--eval-checkpoint ... --merge-results results_ce.json`. **Pending.**
+
+## A.9 Reproducibility / provenance ledger
+
+| artifact | provenance |
+|---|---|
+| `proofoflife_results.json` | native, `eval_harness.py --ladder`, 5 real models |
+| `training_log_qwen05b_naive_seed{7,8,9}` | native, Colab T4 |
+| `training_log_qwen05b_mitigated_seed{7,8,9}` | native, Colab T4 |
+| `training_log_qwen05b_tuned_seed7` | **transcribed from console, partial (≤step 200), seed 7 only** |
+| `training_log_qwen05b_exactpg_seed7` | native, Colab, full 400 |
+| `training_log_qwen05b_exactpg_seed8` | native, Colab, **partial (≤step 25)** |
+| `results_exactpg.json` | native, seed-7 checkpoint on committed test |
+| `learning_curve.png` | generated from the naive+mitigated logs |
+| Arm E (CE) logs | **not yet produced** |
+
+Every native training log carries a first-line `config` record. Transcribed /
+partial logs carry a `_provenance` field. The committed `benchmark_test.jsonl`
+was evaluated once per method and never regenerated.
