@@ -10,6 +10,14 @@ verdict can therefore serve simultaneously as (a) a benchmark label and
 trace benchmark generated from it, an evaluation harness for frontier
 models, and a training harness that uses the verifier as the reward signal.
 
+**Released model.** The verifier-cross-entropy fine-tuned Qwen2.5-0.5B is
+published on the Hugging Face Hub:
+[`esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b`](https://huggingface.co/esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b)
+(model card: `MODEL_CARD.md`). The weights are hosted there, not committed to
+this repo — evaluate the released model on any split with zero retraining:
+`PYTHONPATH=. python train_verifier_reward.py --eval-checkpoint
+esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b --test-file benchmark_test.jsonl`.
+
 Everything runs on a CPU-only machine with no network access (the only
 exception: pointing the training harness at a real Hugging Face model
 downloads its weights). Install dependencies with
