@@ -299,6 +299,11 @@ def train(args) -> list:
     model_src = args.warm_start_from or args.model
     model, tokenizer = build_model_and_tokenizer(model_src, args.seed, attn)
     model.to(device)
+    if args.warm_start_from:
+        # Released CE checkpoints are saved fp16; fp16 is stable for
+        # forward-only eval but its narrow range overflows under the training
+        # backward/optimizer, producing non-finite scores. Train in fp32.
+        model = model.float()
     model.train()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
@@ -311,6 +316,8 @@ def train(args) -> list:
         ref_src = args.warm_start_from or args.model
         ref_model, _ = build_model_and_tokenizer(ref_src, args.seed, attn)
         ref_model.to(device)
+        if args.warm_start_from:
+            ref_model = ref_model.float()  # match the fp32 policy for a valid KL
         ref_model.eval()
         ref_model.requires_grad_(False)
 
