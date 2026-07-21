@@ -294,10 +294,25 @@ def train(args) -> list:
     if args.save_dir:  # fail on an unusable path now, not after N steps
         os.makedirs(args.save_dir, exist_ok=True)
     attn = "eager" if device.type == "mps" else None
-    model, tokenizer = build_model_and_tokenizer(args.model, args.seed, attn)
+    # Warm start: initialize the policy from a CE checkpoint instead of the
+    # base model (the established supervised-warm-start-then-RL recipe).
+    model_src = args.warm_start_from or args.model
+    model, tokenizer = build_model_and_tokenizer(model_src, args.seed, attn)
     model.to(device)
     model.train()
     opt = torch.optim.AdamW(model.parameters(), lr=args.lr)
+
+    # KL anchor: a FROZEN reference policy (a second copy of the warm-start
+    # checkpoint) that the RL update is penalized for drifting away from, so
+    # refinement stays near the good warm policy instead of wandering into a
+    # corner. Only built when --kl-coef > 0 (keeps the no-KL path unchanged).
+    ref_model = None
+    if args.kl_coef > 0:
+        ref_src = args.warm_start_from or args.model
+        ref_model, _ = build_model_and_tokenizer(ref_src, args.seed, attn)
+        ref_model.to(device)
+        ref_model.eval()
+        ref_model.requires_grad_(False)
 
     train_examples = load_examples(args.train_file, args.prompt_style)
     class_weights = (compute_class_weights(train_examples)
@@ -359,6 +374,18 @@ def train(args) -> list:
                         "skip guards enabled)")
                 raise RuntimeError(f"non-finite candidate scores at step "
                                    f"{step}: {lps.tolist()}")
+            # KL penalty toward the frozen reference policy, over the two-way
+            # decision softmax: KL(pi || pi_ref) = sum_d pi(d) (logpi - logref).
+            # Added to whichever objective loss is used below. 0 when disabled.
+            kl_term = 0.0
+            if ref_model is not None:
+                with torch.no_grad():
+                    ref_lps = candidate_logprobs(
+                        ref_model, tokenizer, ex["prompt"], device)
+                ref_logp = torch.log_softmax(ref_lps, dim=0)
+                cur_logp = torch.log_softmax(lps, dim=0)
+                kl = (cur_logp.exp() * (cur_logp - ref_logp)).sum()
+                kl_term = args.kl_coef * kl / len(batch)
             if args.ce_loss:
                 # Verifier cross-entropy: the verdict is the target decision
                 # and the loss is -log pi(target). Its gradient is
@@ -373,7 +400,7 @@ def train(args) -> list:
                 target_idx = 0 if verdict == 1 else 1  # idx 0 = AUTHORIZE
                 logp = torch.log_softmax(lps, dim=0)
                 w = class_weights[verdict] if class_weights else 1.0
-                loss = -w * logp[target_idx] / len(batch)
+                loss = -w * logp[target_idx] / len(batch) + kl_term
                 loss.backward()
                 step_loss += loss.detach()
                 with torch.no_grad():
@@ -396,7 +423,7 @@ def train(args) -> list:
                 r_auth = reward_for_decision(1, ex, class_weights)
                 r_ref = reward_for_decision(0, ex, class_weights)
                 exp_r = probs_g[0] * r_auth + probs_g[1] * r_ref
-                loss = -exp_r / len(batch)
+                loss = -exp_r / len(batch) + kl_term
                 if args.entropy_beta > 0:
                     logp = torch.log_softmax(lps, dim=0)
                     loss = loss - args.entropy_beta * \
@@ -410,7 +437,7 @@ def train(args) -> list:
             decision = 1 if idx == 0 else 0
             r = reward_for_decision(decision, ex, class_weights)
             log_pi = torch.log_softmax(lps, dim=0)[idx]
-            loss = -(r - baseline) * log_pi / len(batch)
+            loss = -(r - baseline) * log_pi / len(batch) + kl_term
             if args.entropy_beta > 0:
                 # entropy bonus keeps P(minority decision) alive so the
                 # policy keeps exploring instead of locking into refusal
@@ -525,6 +552,14 @@ def main() -> None:
                     choices=("compact", "nl"),
                     help="'nl' trains on the natural-language ladder prompts "
                          "so training and final ladder eval share a format")
+    ap.add_argument("--warm-start-from", default=None, metavar="PATH",
+                    help="initialize the policy from a CE checkpoint "
+                         "(dir or HF id) instead of the base model — the "
+                         "supervised-warm-start-then-RL recipe")
+    ap.add_argument("--kl-coef", type=float, default=0.0,
+                    help="KL penalty coefficient toward a frozen reference "
+                         "policy (the warm-start checkpoint), keeping RL "
+                         "refinement near the warm policy (0 disables)")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--train-file", default="benchmark_train.jsonl")
     ap.add_argument("--test-file", default="benchmark_test.jsonl")
@@ -548,6 +583,8 @@ def main() -> None:
 
     if args.ce_loss and args.exact_pg:
         ap.error("--ce-loss and --exact-pg are mutually exclusive objectives")
+    if args.kl_coef < 0:
+        ap.error("--kl-coef must be >= 0")
 
     if args.eval_checkpoint:
         eval_checkpoint(args.eval_checkpoint, args.test_file,

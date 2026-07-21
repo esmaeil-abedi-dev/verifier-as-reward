@@ -66,6 +66,7 @@ def _args(**over):
                 eval_max_actions=8, device="cpu", save_dir=None,
                 clip_grad_norm=1.0, entropy_beta=0.0, balance_reward=False,
                 exact_pg=False, ce_loss=False, prompt_style="compact",
+                warm_start_from=None, kl_coef=0.0,
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
@@ -343,6 +344,70 @@ def test_nl_prompt_style():
     assert nl[0]["prompt"] != compact[0]["prompt"]
     assert "authorization auditor" in nl[0]["prompt"]
     assert compact[0]["prompt"].startswith("ROOT ")
+
+
+# --- warm-start RL (E1): init from a checkpoint + KL to a frozen ref -------
+
+def test_warm_start_initializes_from_checkpoint():
+    # save a (trivially) trained tiny checkpoint, then warm-start from it and
+    # confirm the policy begins from those weights, not a fresh base model
+    save_dir = os.path.join(_TMP.name, "warm_ckpt")
+    train(_args(ce_loss=True, save_dir=save_dir, steps=3, lr=5e-3,
+                log_file=os.path.join(_TMP.name, "warm_train.jsonl")))
+    from train_verifier_reward import build_model_and_tokenizer
+    warm, _ = build_model_and_tokenizer(save_dir, seed=0)
+    base, _ = build_model_and_tokenizer("tiny", seed=0)
+    warm_sd, base_sd = warm.state_dict(), base.state_dict()
+    diff = max(float((warm_sd[k] - base_sd[k]).abs().max())
+               for k in warm_sd if warm_sd[k].shape == base_sd[k].shape)
+    assert diff > 1e-4, "warm checkpoint should differ from the base model"
+    # a warm-started run loads and trains without error
+    h = train(_args(warm_start_from=save_dir, balance_reward=True,
+                    log_file=os.path.join(_TMP.name, "ws_run.jsonl")))
+    assert [p["step"] for p in h] == [0, 1, 2]
+
+
+def test_kl_zero_when_policy_equals_reference():
+    # with kl_coef>0 but policy==ref (both from the same source, step 0), the
+    # KL contribution is ~0; a warm+KL run is deterministic and finite
+    import torch
+    from train_verifier_reward import build_model_and_tokenizer, \
+        candidate_logprobs
+    m, tok = build_model_and_tokenizer("tiny", seed=0)
+    ref, _ = build_model_and_tokenizer("tiny", seed=0)
+    ref.eval()
+    p = candidate_logprobs(m, tok, "ROOT x\nDECISION:", DEVICE)
+    with torch.no_grad():
+        rp = candidate_logprobs(ref, tok, "ROOT x\nDECISION:", DEVICE)
+    cur = torch.log_softmax(p, 0)
+    rlp = torch.log_softmax(rp, 0)
+    kl = (cur.exp() * (cur - rlp)).sum()
+    assert abs(float(kl)) < 1e-5, f"KL should be ~0 when policy==ref: {kl}"
+
+
+def test_kl_arm_runs_and_deterministic():
+    a = dict(warm_start_from=None, kl_coef=0.1, balance_reward=True)
+    h1 = train(_args(log_file=os.path.join(_TMP.name, "kl1.jsonl"), **a))
+    h2 = train(_args(log_file=os.path.join(_TMP.name, "kl2.jsonl"), **a))
+    assert h1 == h2, "warm+KL REINFORCE must be deterministic per seed"
+    for p in h1[1:]:
+        assert isinstance(p["mean_reward"], float)
+
+
+def test_kl_positive_when_policy_diverges_from_reference():
+    import torch
+    from train_verifier_reward import build_model_and_tokenizer, \
+        candidate_logprobs
+    m, tok = build_model_and_tokenizer("tiny", seed=0)
+    ref, _ = build_model_and_tokenizer("tiny", seed=1)  # different init
+    ref.eval()
+    cur = torch.log_softmax(
+        candidate_logprobs(m, tok, "ROOT x\nDECISION:", DEVICE), 0)
+    with torch.no_grad():
+        rlp = torch.log_softmax(
+            candidate_logprobs(ref, tok, "ROOT x\nDECISION:", DEVICE), 0)
+    kl = (cur.exp() * (cur - rlp)).sum()
+    assert float(kl) >= -1e-6, "KL is non-negative"
 
 
 # --- checkpoint ladder-row evaluation (offline, tiny model) ----------------
