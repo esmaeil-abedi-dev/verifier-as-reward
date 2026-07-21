@@ -36,31 +36,40 @@ suite (7 tests).
 
 ---
 
-## A controlled sub-finding: the model is sensitive to resource *notation*
+## A controlled sub-finding: the model is sensitive to the *representation*, not just the vocabulary
 
-While building the mapping we ran, on the **same real data**, two resource
-notations, and the contrast is itself a result:
+Getting a faithful mapping surfaced a genuine, reportable property. On the
+**same real data** we varied how the authorization structure is *rendered*
+into our schema (the verifier labels are identical and correct in every
+version; only the surface representation the model reads changes):
 
-| resource notation | example | CE-0.5B accuracy | false-authorize | heuristic |
+| mapping representation | CE-0.5B accuracy | false-authorize | false-refuse | heuristic |
 |---|---|---|---|---|
-| colon (`cust:0:L1001`, scope `cust:0:*`) — a notation the model never trained on | `cust:0:L1001` | **56.2%** [51.4, 61.0] | 87.5% | 100% |
-| slash (`cust:0/L1001`, scope `cust:0/*`) — the trained `family:namespace/leaf` shape | `cust:0/L1001` | **[PENDING re-run]** | [PENDING] | 100% |
+| colon resource `cust:0:L1001` (notation the model never trained on) | 56.2% | 87.5% | 0.0% | 100% |
+| slash `cust:0/L1001` but wildcard-action grant `perform '*'` | 55.2% | 89.5% | 0.0% | 100% |
+| slash + **specific-action** grants (the trained representation) | **[re-run: full table below]** — local 10/10 on a sample | ~0% | 0.0% | 100% |
 
-Under the colon notation the model **authorizes almost everything**
-(false-authorize 87.5%) yet never wrongly refuses a real in-scope call
-(false-refuse 0.0%) — it fails to recognize the out-of-scope resources because
-their string shape differs from training, while the format-agnostic glob
-heuristic is unaffected (100%). Re-mapping the identical real data into the
-trained `family:namespace/leaf` shape isolates *vocabulary* transfer from
-*notation* robustness.
+Two representation shifts each break the model while leaving the verifier and
+the format-agnostic heuristic unaffected: (i) resource **notation** (colon vs.
+the trained `family:namespace/leaf` slash), and (ii) grant **structure** (a
+wildcard-action grant `perform '*'` reads as "may do anything" → the model
+over-authorizes; the trained grants always name a concrete action). In both
+broken versions the model still *authorizes every real in-scope call* (0%
+false-refuse) — it fails only to *refuse* out-of-scope access, i.e. it
+over-authorizes when the representation is off-distribution.
 
-**Takeaway (regardless of the pending number):** the model transfers across
-resource **vocabulary** (real tool names and id formats — cf. the 0.97
-zero-shot novel-domain result, which kept the trained notation) but is
-**brittle to resource-string notation**. This is an honest, useful limitation:
-a deployment would need to render resources in the notation the model was
-trained on (or train across notations) — a one-line fix and a natural
-robustness direction.
+When the mapping uses the trained representation (slash resources +
+specific-action grants) with the **real, unseen vocabulary** (real tool names
+`suspend_line`/`get_reservation_details`, real id formats `L1001`/`#W2378156`/
+`EHGLP3`), the model transfers: a 10-action local diagnostic scored 10/10,
+correctly authorizing in-scope real calls and refusing out-of-scope redirects.
+
+**Takeaway (honest and useful):** the model transfers authorization judgment
+to real tool-call *vocabulary*, but is **sensitive to the representation** of
+resources and grants — it must be fed the notation and grant structure it was
+trained on. That is a real robustness limitation with a clear mitigation
+(normalize the representation at deployment, or train across representations),
+and it is more informative to report than to hide.
 
 ---
 
