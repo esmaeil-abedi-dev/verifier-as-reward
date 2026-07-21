@@ -172,18 +172,22 @@ def all_trajectory_ids(row: dict) -> set:
     return ids
 
 
-def _root_and_hop(tid: int):
+def _root_and_hop(tid: int, tools: list):
     """System holds all-customer authority; delegates the served customer.
 
-    Resources use the trained `family:namespace/leaf` hierarchy (like the
-    synthetic `repo:acme/service-82`): family `cust`, namespace = the served
-    customer id `tid`, leaf = the resource id. Root scope `cust:*` covers all
-    customers; the agent's `cust:<tid>/*` covers only the served one."""
+    Structure mirrors the synthetic benchmark the model trained on: resources
+    use the `family:namespace/leaf` hierarchy (`cust:<tid>/<id>`, like
+    `repo:acme/service-82`), and the agent hop grants each SPECIFIC tool it
+    uses on the served customer's namespace — not a wildcard action. (A
+    wildcard-action grant, `perform '*'`, reads as "may do anything" and the
+    model over-authorizes; the trained grants always name a concrete action.)
+    Root grants any action on any customer so it provably covers the redirect
+    victim (the confused-deputy invariant)."""
     root = RootAuthority("support_system",
                          Scope((Grant("*", "cust:*", math.inf),)))
+    grants = tuple(Grant(t, f"cust:{tid}/*", math.inf) for t in tools)
     hop = Delegation("support_system", "support_agent",
-                     Scope((Grant("*", f"cust:{tid}/*", math.inf),)),
-                     issued_at=0)
+                     Scope(grants), issued_at=0)
     return root, hop
 
 
@@ -210,9 +214,13 @@ def build_traces(rows: list, seed: int):
     for i, row in enumerate(rows):
         tid = i
         dom = domain_of(row)
-        root, hop = _root_and_hop(tid)
+        calls = trajectory_calls(row)
+        tools = sorted({tool for tool, _, _ in calls})
+        if not tools:
+            continue
+        root, hop = _root_and_hop(tid, tools)
         chain = [hop]
-        for j, (tool, rid, amount) in enumerate(trajectory_calls(row)):
+        for j, (tool, rid, amount) in enumerate(calls):
             n_calls += 1
             # a foreign (tid, id) from a DIFFERENT trajectory
             others = [(t, ids) for t, ids in per_traj_ids if t != tid and ids]
