@@ -47,7 +47,7 @@ version; only the surface representation the model reads changes):
 |---|---|---|---|---|
 | colon resource `cust:0:L1001` (notation the model never trained on) | 56.2% | 87.5% | 0.0% | 100% |
 | slash `cust:0/L1001` but wildcard-action grant `perform '*'` | 55.2% | 89.5% | 0.0% | 100% |
-| slash + **specific-action** grants (the trained representation) | **[re-run: full table below]** — local 10/10 on a sample | ~0% | 0.0% | 100% |
+| slash + **specific-action** grants (the trained representation) | **90.8%** [87.5, 93.2] | 18.5% | 0.0% | 100% |
 
 Two representation shifts each break the model while leaving the verifier and
 the format-agnostic heuristic unaffected: (i) resource **notation** (colon vs.
@@ -73,22 +73,33 @@ and it is more informative to report than to hide.
 
 ---
 
-## Primary result — vocabulary transfer (corrected `family:namespace/leaf` notation)
+## Primary result — vocabulary transfer (trained representation, real tau2 tool calls)
 
-**[PENDING the corrected Colab re-run — `colab_realtrace.ipynb` after the
-mapper fix.]** Per-domain CE-0.5B accuracy / false-authorize / false-refuse
-with 95% Wilson CIs, plus the heuristic floor:
+Released CE-0.5B vs the lexical-heuristic floor on the mapped real traces
+(accuracy [95% Wilson CI], false-authorize, false-refuse):
 
-| backend | telecom (n≈362) | airline (n≈20) | retail (n≈18) | all (n=400) |
-|---|---|---|---|---|
-| CE-0.5B (released) | — | — | — | — |
-| lexical heuristic | 100% | 100% | 100% | 100% |
+| domain | n | CE-0.5B accuracy | CE false-auth | CE false-refuse | heuristic |
+|---|---|---|---|---|---|
+| telecom | 362 | 91.4% [88.1, 93.9] | 17.1% | 0.0% | 100% |
+| airline | 20 | 90.0% [69.9, 97.2] | 20.0% | 0.0% | 100% |
+| retail | 18 | 77.8% [54.8, 91.0] | 44.4% | 0.0% | 100% |
+| **all** | **400** | **90.8% [87.5, 93.2]** | **18.5%** | **0.0%** | **100%** |
 
-Interpretation to write once numbers land: the strongest sentence is the CE
-model's **false-refuse rate on the 200 genuinely-real authorized calls**
-(it correctly authorizes real, independently-authored tool calls it never
-saw); the false-authorize rate on the redirects, reported next to the
-heuristic floor, shows resource-scope judgment transferring to real vocabulary.
+**How to read it (honest):**
+- **Strongest, cleanest claim:** the model **correctly authorizes 100% of the
+  200 genuinely-real, independently-authored in-scope tool calls** (0%
+  false-refuse, every domain). It does not wrongly block legitimate real
+  agent actions — on tool names and id formats it never trained on.
+- On the **unauthorized** side it catches ~81.5% of out-of-scope redirects
+  (false-authorize 18.5%), i.e. it transfers resource-scope judgment to real
+  vocabulary but **does not beat the format-agnostic heuristic (100%)** on
+  this resource-scope task. Report the heuristic floor alongside — the model's
+  contribution here is judgment transfer, not out-scoring a glob matcher.
+- **Overall 90.8%** on real tau2 tool calls (vs. ~55% under an off-
+  distribution representation — see the table above) is the headline transfer
+  number, with the representation-sensitivity caveat attached.
+- retail's lower 77.8% sits on n=18 (wide CI [54.8, 91.0]); telecom, the
+  action-rich domain with n=362, is the reliable estimate at 91.4%.
 
 ---
 
