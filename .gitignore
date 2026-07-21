@@ -13,3 +13,4 @@ ood_test.jsonl
 unseen_test.jsonl
 novel_domain_test.jsonl
 novel_all6.jsonl
+predictions_*.jsonl

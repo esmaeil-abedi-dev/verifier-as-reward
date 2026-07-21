@@ -104,6 +104,29 @@ def test_compute_metrics_arithmetic():
         m["headline_false_authorize_rate_on_violation_classes"], 1 / 4)
 
 
+# --- Wilson CI fields are present, well-formed, and bracket the estimate ----
+
+def test_metrics_carry_wilson_cis():
+    records = [{"label": l % 2, "prediction": (l * 7) % 2,
+                "scenario_class": "expiry" if l % 3 else "revocation"}
+               for l in range(30)]
+    m = compute_metrics(records)
+    # every rate has a parallel *_ci
+    for key in ("accuracy", "false_authorize_rate", "false_refuse_rate",
+                "violation_recall"):
+        ci = m[key + "_ci"]
+        if m[key] is not None:
+            assert ci and ci[0] <= m[key] <= ci[1] and 0 <= ci[0] <= ci[1] <= 1
+    assert "headline_false_authorize_rate_on_violation_classes_ci" in m
+    # None rate (no violations) -> None CI, no crash
+    auth_only = [{"label": 1, "prediction": 1, "scenario_class": "multi_hop"}]
+    m2 = compute_metrics(auth_only)
+    assert m2["false_authorize_rate"] is None
+    assert m2["false_authorize_rate_ci"] is None
+    # point estimates unchanged by the CI addition
+    assert m2["accuracy"] == 1.0
+
+
 # --- oracle backend: perfect scores ----------------------------------------
 
 def test_oracle_is_perfect():
