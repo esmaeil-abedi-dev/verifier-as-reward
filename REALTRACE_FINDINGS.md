@@ -21,6 +21,42 @@ agent's real tool calls that target a resource id (domain-agnostic: telecom
 re-verifies under `label_action`; the mapper carries an offline fixture test
 suite (7 tests).
 
+## What is real vs. constructed (read this before claiming "real data")
+
+A reviewer will ask exactly how much of this is real. Component-by-component:
+
+| element of each action | provenance |
+|---|---|
+| tool name (`suspend_line`, `get_reservation_details`) | **REAL** — verbatim from tau2 |
+| tool arguments / resource-id values (`L1001`, `#W2378156`, `EHGLP3`) | **REAL** — verbatim from tau2 |
+| numeric amount (when present) | **REAL** — verbatim from tau2 |
+| **authorized** action = (this agent, this tool, its served customer's id) | **REAL** — the call the agent actually made |
+| **unauthorized** action = (this tool, a *different* customer's real id) | **CONSTRUCTED** — real ingredients, synthetic pairing (the redirect never occurred in the log) |
+| root / delegation / scope grants | **CONSTRUCTED** — our formalism, imposed on single-principal traces (tau2 has no delegation) |
+| every label | **our VERIFIER** — applied to the constructed scope structure |
+
+**The precise, defensible claims** (use these words; do not round up):
+- ✅ "The model correctly authorizes **real, independently-authored in-scope
+  tool calls** it never saw" — the 200 authorized actions are real calls;
+  0% false-refuse. This is the strongest and cleanest sentence.
+- ✅ "Its authorization judgment **transfers to real tool-call vocabulary**
+  (tool names and resource-id formats from an independent benchmark)."
+- ⚠️ NOT "evaluated on real authorization logs" — there is no such corpus;
+  tau2 is good-behavior data with no naturally-occurring violations, so the
+  **unauthorized half is constructed** (real calls redirected to real foreign
+  ids). Say "constructed scope-violations on real calls."
+- ⚠️ NOT "90.8% on real data" unqualified — that number mixes the real
+  (authorized) and constructed (unauthorized) halves. Report the two halves
+  separately: **0% false-refuse on real in-scope calls** (the real-data
+  result) and **18.5% false-authorize on constructed redirects** (the
+  constructed-violation result).
+
+Why the unauthorized half must be constructed: tau2 is supervised
+good-behavior data — the agents stay in scope — so there are no natural
+out-of-scope actions to label 0. A balanced test therefore requires
+constructing violations; we do so from real calls and real foreign ids, and
+the verifier (not us) labels them. This is disclosed, not hidden.
+
 **Scope / limits (state plainly in the paper):**
 - **Single-hop** (tau2 is single-principal), so the attenuated-delegation
   *structure* is synthetic in the mapping; we test authorization judgment on
