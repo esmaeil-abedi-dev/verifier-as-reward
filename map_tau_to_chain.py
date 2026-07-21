@@ -11,12 +11,12 @@ as everywhere else in the paper.
 Mapping (single principal -> single-hop chain):
   - Each tau2 trajectory serves ONE customer. The support *system* holds
     authority over every customer (`cust:*`); it delegates to the agent
-    authority over only the served customer (`cust:<tid>:*`). One hop.
+    authority over only the served customer (`cust:<tid>/*`). One hop.
   - The agent's real tool calls (parsed from the assistant turns' JSON) that
     reference the served customer's resource IDs become AUTHORIZED actions:
-    action = tool name, resource = `cust:<tid>:<resource-id>`.
+    action = tool name, resource = `cust:<tid>/<resource-id>`.
   - Each such call is also emitted REDIRECTED to a *different* trajectory's
-    real resource id (`cust:<other>:<foreign-id>`) — a confused deputy on a
+    real resource id (`cust:<other>/<foreign-id>`) — a confused deputy on a
     real call: the system (root) could act on it, the agent (its narrowed
     scope) may not. The verifier labels these unauthorized.
 
@@ -173,11 +173,16 @@ def all_trajectory_ids(row: dict) -> set:
 
 
 def _root_and_hop(tid: int):
-    """System holds all-customer authority; delegates the served customer."""
+    """System holds all-customer authority; delegates the served customer.
+
+    Resources use the trained `family:namespace/leaf` hierarchy (like the
+    synthetic `repo:acme/service-82`): family `cust`, namespace = the served
+    customer id `tid`, leaf = the resource id. Root scope `cust:*` covers all
+    customers; the agent's `cust:<tid>/*` covers only the served one."""
     root = RootAuthority("support_system",
                          Scope((Grant("*", "cust:*", math.inf),)))
     hop = Delegation("support_system", "support_agent",
-                     Scope((Grant("*", f"cust:{tid}:*", math.inf),)),
+                     Scope((Grant("*", f"cust:{tid}/*", math.inf),)),
                      issued_at=0)
     return root, hop
 
@@ -214,9 +219,9 @@ def build_traces(rows: list, seed: int):
             ft, fids = rng.choice(others)
             foreign_id = rng.choice(fids)
             auth = _action_record(
-                "support_agent", tool, f"cust:{tid}:{rid}", amount, root, chain)
+                "support_agent", tool, f"cust:{tid}/{rid}", amount, root, chain)
             redir = _action_record(
-                "support_agent", tool, f"cust:{ft}:{foreign_id}", amount, root, chain)
+                "support_agent", tool, f"cust:{ft}/{foreign_id}", amount, root, chain)
             traces.append({
                 "trace_id": f"tau-{dom}-{tid:04d}-{j:02d}",
                 "scenario_class": "attack_confused_deputy",
