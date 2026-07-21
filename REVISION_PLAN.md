@@ -159,44 +159,112 @@ Uses existing training + eval; only a corpus-subsampling helper is new.
 
 ---
 
-## E5 — Real-trace external validity (high value). New `map_tau_to_chain.py`.
+## E5 — Real-trace external validity (high value). Two independent sources.
 
 **Goal:** show authorization judgment transfers to **independently-authored**
-real tool-call traces (tau2-bench), with our verifier assigning every label.
+real tool-call traces, with our verifier assigning every label. Use **two
+independent public sources** so the claim survives a "single-dataset" reviewer
+objection: tau2-bench (primary) and AgentDojo (cross-benchmark).
 
-**Steps:**
-1. `pip install datasets`; pull one tau2 set from HF
-   (`snorkelai/Tau2-Bench-Airline-With-Code-Agents` or
+### Data-split policy — FIXED NOW, never revisited (the point of this whole thread)
+
+tau2-bench has three domains — **airline, retail, telecom**. We split **by
+domain, up front**, so nothing leaks and there is no test-set selection:
+
+| split | tau2 domains | role |
+|---|---|---|
+| real-train | airline + retail | training (only for the train-on-real half, E5b) |
+| real-val | fixed-seed slice of real-train | tuning |
+| **real-test (quarantined)** | **telecom** | the unseen real-domain test — evaluated ONCE |
+
+Telecom is quarantined from the moment the data is mapped; it is never used for
+tuning or model selection. The split is deterministic (by domain + fixed seed)
+and documented in `REALTRACE_FINDINGS.md`. Whole-domain hold-out (telecom) is a
+stronger "unseen" than held-out trajectories of a seen domain — it is a
+different policy and tool schema, the real-data analogue of our synthetic
+file/db hold-out.
+
+### E5a — External validity, evaluation-only (the reviewer's core ask)
+
+The *synthetic-trained* CE model is evaluated on **all three** tau2 domains —
+all unseen by construction (the model trained only on synthetic domains), so
+telecom being reserved does not matter here. Report **per-domain**.
+
+Steps:
+1. `pip install datasets`; pull tau2 from HF
+   (`snorkelai/Tau2-Bench-Airline-With-Code-Agents`,
    `Jarrodbarnes/tau2-sft-v4-dataset`, Apache-2.0). Inspect the tool-call schema
-   (tool name, args, actor/role per turn). **This is the one experiment needing
-   a network download + license check.**
-2. `map_tau_to_chain.py`: each trajectory → our `(root, delegations, action)`:
-   - user/system policy → `root` scope (authority granted, e.g. "read/modify
-     this user's booking only");
-   - assistant→tool calls → `actions` (`action`, `resource`, `amount` from tool
-     args);
-   - single-principal dataset ⇒ single-hop chain (root → agent); **document
-     this as the fidelity limit.**
-3. `label_action(action, chain, root)` assigns every label. Never hand-label.
-   Save `real_trace_test.jsonl`.
-4. **Manual fidelity audit** of ~15 mapped+labeled actions: does the verifier
-   verdict match what the tau2 policy implies? Report the agreement rate; if
-   lossy, say so numerically.
-5. Eval CE-trained 0.5B + sonnet-4.5 + llama-8b on `real_trace_test.jsonl`;
-   accuracy / false-authorize with Wilson CIs.
+   (tool name, args, actor/role). Network download + license check needed.
+2. `map_tau_to_chain.py`: each trajectory → `(root, delegations, action)`:
+   user/system policy → `root` scope; assistant→tool calls → `actions`
+   (`action`, `resource`, `amount` from tool args); single-principal ⇒
+   single-hop chain (root → agent) — **document as the fidelity limit.**
+3. `label_action` assigns EVERY label (never hand-label). Save one file per
+   domain: `real_trace_<domain>.jsonl`.
+4. **Manual fidelity audit** of ~15 mapped+labeled actions per domain: does the
+   verifier verdict match what the tau2 policy implies? Report the agreement
+   rate; if lossy, say so numerically.
+5. Eval CE-trained 0.5B + sonnet-4.5 + llama-8b per domain; accuracy /
+   false-authorize with Wilson CIs.
 
-**Claim discipline:** "authorization judgment on independently-authored real
-tool-call traces," NOT "real multi-hop delegation logs" (tau2 is single-
-principal; attenuation is partly synthetic in the mapping). State the single-hop
-limit plainly.
+### E5b — Real-domain transfer, train-on-real (the extension you asked for)
 
-**Deliverables:** `map_tau_to_chain.py`, `real_trace_test.jsonl`
-(+discard/agreement counts), `results_realtrace.json`, `REALTRACE_FINDINGS.md`.
+Fine-tune (verifier-CE) on the **airline+retail** mapped traces, evaluate on the
+quarantined **telecom** — the real-data OOD, symmetric to synthetic file/db.
+Report the train-domain vs held-out-domain gap with CIs.
 
-**Risks:** dataset schema may not cleanly expose the policy/authority — mapping
-may be lossy or require judgment calls (record them); some trajectories may not
-map at all (report the map/discard rate). This is the highest-uncertainty
-experiment; timebox the mapping and report whatever fraction maps faithfully.
+**Feasibility GATE (check before committing to E5b):** after single-hop mapping
++ label-invariance discards, count mapped actions per domain. Training needs
+enough per-domain volume; if airline+retail are too thin to train on, **keep
+E5 evaluation-only (E5a) and record the counts as the reason.** E5a does not
+depend on this gate; E5b does.
+
+### E5c — Cross-benchmark source: AgentDojo (independent of tau2)
+
+A genuinely independent second source so "external validity" rests on more than
+one benchmark family. **AgentDojo** (ETH Zürich, **MIT license**) is a security
+benchmark whose tasks already separate the authorized user goal from
+injected/unauthorized actions across **banking, workspace, slack, travel** —
+the injected action is literally "the agent wielding authority it was not
+granted," which maps cleanly to our root-scope/action model (and to the
+`confused_deputy` / `scope_escalation` classes).
+
+- `map_agentdojo_to_chain.py`: user task → `root` scope (what the task
+  authorizes); each candidate tool call (legitimate + injected) → an `action`;
+  `label_action` labels all. **Check first** whether the task/injection specs
+  can be mapped *declaratively* (from the environment + injected-goal
+  definitions) without running agents — likely yes, which is cleaner than
+  parsing generated trajectories.
+- Eval CE-0.5B + one frontier model; accuracy / false-authorize with Wilson CIs.
+- Deliverable file: `real_trace_agentdojo.jsonl`, folded into results below.
+- Fallback if AgentDojo mapping proves lossy: **TOUCAN** (Apache-2.0, 1.5M real
+  MCP trajectories) for volume — but weaker authorization fit (no native
+  authorized/unauthorized boundary), so AgentDojo is preferred.
+
+**Claim discipline (all of E5):** "authorization judgment on independently-
+authored real tool-call traces," NOT "real multi-hop delegation logs" — tau2
+and AgentDojo are single-principal, so attenuation is partly synthetic in the
+mapping. State the single-hop limit plainly. AgentDojo's injected-action
+structure makes the unauthorized cases especially faithful.
+
+**Citations (papers, not data):** tau-bench (arXiv:2406.12045), tau2-bench
+(arXiv:2506.07982) for provenance; Nakash et al. (arXiv:2506.09600) as the
+re-labeling precedent; AgentDojo (Debenedetti et al., ETH) for the second
+source. The two HF mirrors are the same benchmark family — do NOT count them as
+two independent datasets.
+
+**Deliverables:** `map_tau_to_chain.py`, `map_agentdojo_to_chain.py`,
+`real_trace_<domain>.jsonl` (per tau2 domain) + `real_trace_agentdojo.jsonl`
+(each with discard/agreement counts), `results_realtrace.json` (per-source,
+per-domain, +CIs), and `REALTRACE_FINDINGS.md` (mapping-fidelity numbers,
+per-domain transfer, E5b gap or the reason it was skipped, and the two-source
+cross-benchmark result).
+
+**Risks:** schemas may not cleanly expose policy/authority — mapping may be
+lossy or need judgment calls (record them); some trajectories may not map
+(report the map/discard rate). Highest-uncertainty experiment; timebox each
+mapping; report whatever fraction maps faithfully. Two sources hedge the risk:
+if one maps poorly, the other still supports the claim.
 
 ---
 
@@ -209,6 +277,9 @@ experiment; timebox the mapping and report whatever fraction maps faithfully.
 4. **E1** (the headline; needs the two train-harness flags + Colab GPU runs;
    biggest compute).
 5. **E5** (external download + mapping; highest uncertainty; timeboxed).
+   Do **E5a** (tau2 eval-only, per-domain) and **E5c** (AgentDojo) first — they
+   need no training; **E5b** (train-on-real, telecom held out) only after its
+   feasibility gate (per-domain mapped-action counts) passes.
 6. **E4** (if time; pure reruns of the winning config at smaller sizes).
 
 **Compute split:** E2/E3/E4-eval and all `local:` forward-only evals run on the
