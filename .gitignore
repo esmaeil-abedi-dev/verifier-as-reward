@@ -15,3 +15,4 @@ novel_domain_test.jsonl
 novel_all6.jsonl
 predictions_*.jsonl
 noisy_test.jsonl
+real_trace_*.jsonl
