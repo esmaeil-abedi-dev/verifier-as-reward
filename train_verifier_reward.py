@@ -518,7 +518,9 @@ def eval_checkpoint(model_path: str, test_file: str, device: torch.device,
 
     traces = load_traces(test_file)
     out = run_eval(make_checkpoint_backend(model_path, device), traces)
-    name = f"local:{model_path}"
+    # key by model AND test file so evaluating one checkpoint on several
+    # test sets (committed/fresh/per-domain) doesn't overwrite prior entries
+    name = f"local:{model_path}::{os.path.basename(test_file)}"
     print_summary(name, out["metrics"])
     if merge_results:
         with open(merge_results) as f:

@@ -448,7 +448,8 @@ def test_checkpoint_backend_and_ladder_row():
     m = out["metrics"]
     assert m["n_actions"] == 2 and m["parse_failure_rate"] == 0.0
     merged = json.load(open(results_path))
-    assert merged["backends"][f"local:{save_dir}"]["metrics"] == m
+    key = f"local:{save_dir}::mini_test.jsonl"  # keyed by model AND test file
+    assert merged["backends"][key]["metrics"] == m
 
 
 # --- same seed reproduces the same training trajectory ---------------------
