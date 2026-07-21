@@ -445,17 +445,23 @@ def compute_metrics(records: list) -> dict:
     return metrics
 
 
-def run_eval(answer_fn: Callable[[str], str], traces: list) -> dict:
+def run_eval(answer_fn: Callable[[str], str], traces: list,
+             prompt_fn: Callable = None) -> dict:
     """Evaluate one backend over every action in `traces`. Labels come from
     the stored corpus, which test_trace_benchmark verifies to be exactly the
     verifier's verdicts. A backend call that raises (rate limit, timeout) is
     recorded as a parse failure for that action; a non-string reply is
     coerced to text and scored if parseable. Completed records are never
-    discarded."""
+    discarded.
+
+    prompt_fn(trace, action) -> str overrides how each action is rendered
+    (default: build_prompt); the noise-robustness experiment passes a
+    renderer that returns surface-perturbed prompts."""
+    render = prompt_fn or build_prompt
     records = []
     for tr in traces:
         for aj in tr["actions"]:
-            prompt = build_prompt(tr, aj)
+            prompt = render(tr, aj)
             error = None
             try:
                 reply = answer_fn(prompt)
