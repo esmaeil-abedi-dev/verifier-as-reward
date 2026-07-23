@@ -17,3 +17,5 @@ predictions_*.jsonl
 noisy_test.jsonl
 real_trace_*.jsonl
 predictions_*.jsonl
+augmented_train.jsonl
+real_trace_all_colon.jsonl
