@@ -382,6 +382,17 @@ def train(args) -> list:
     eval_examples = load_examples(args.test_file, args.prompt_style)
     random.Random(0).shuffle(eval_examples)
     eval_examples = eval_examples[: args.eval_max_actions]
+    # Transfer-selection set (journey lesson: the standard val saturates at
+    # ~1.0 while real transfer varies 50-91%, so last-step checkpointing is a
+    # lottery). When given, every eval point also scores this set and
+    # --save-dir keeps the BEST-selection checkpoint instead of the final one.
+    select_examples = []
+    if args.select_file:
+        select_examples = load_examples(args.select_file, args.prompt_style)
+        random.Random(0).shuffle(select_examples)
+        select_examples = select_examples[: args.eval_max_actions]
+        print(f"selection set: {args.select_file} "
+              f"({len(select_examples)} actions) — save-dir keeps best")
     print(f"device={device.type} model={args.model} "
           f"train_actions={len(train_examples)} eval_actions={len(eval_examples)}")
 
@@ -394,6 +405,14 @@ def train(args) -> list:
                             "args": vars(args), "device": device.type}) + "\n")
     log_f.flush()
 
+    best_select = [-1.0]   # best selection accuracy so far (mutable closure)
+
+    def _save_ckpt():
+        os.makedirs(args.save_dir, exist_ok=True)
+        model.save_pretrained(args.save_dir)
+        if hasattr(tokenizer, "hf_tokenizer"):
+            tokenizer.hf_tokenizer.save_pretrained(args.save_dir)
+
     def log_point(step: int, mean_reward, loss):
         point = {
             "step": step,
@@ -403,6 +422,17 @@ def train(args) -> list:
             "nan_steps_skipped": nan_steps_skipped,
             **evaluate(model, tokenizer, eval_examples, device),
         }
+        sel_note = ""
+        if select_examples:
+            sel = evaluate(model, tokenizer, select_examples, device)
+            point["select_accuracy"] = sel["accuracy"]
+            point["select_violation_rate"] = sel["heldout_violation_rate"]
+            sel_note = f"  select {sel['accuracy']:.3f}"
+            if args.save_dir and sel["accuracy"] > best_select[0]:
+                best_select[0] = sel["accuracy"]
+                _save_ckpt()
+                point["select_checkpoint_saved"] = True
+                sel_note += " *saved*"
         history.append(point)
         log_f.write(json.dumps(point) + "\n")
         log_f.flush()
@@ -411,7 +441,8 @@ def train(args) -> list:
         print(f"step {step:>4}  reward {str(mean_reward):>6}  "
               f"heldout acc {fmt(point['accuracy'])}  "
               f"violation rate {fmt(point['heldout_violation_rate'])}  "
-              f"false-refuse {fmt(point['heldout_false_refuse_rate'])}")
+              f"false-refuse {fmt(point['heldout_false_refuse_rate'])}"
+              f"{sel_note}")
 
     log_point(0, None, None)  # untrained baseline point of the curve
     for step in range(1, args.steps + 1):
@@ -565,11 +596,13 @@ def train(args) -> list:
     print(f"wrote {args.log_file} ({len(history)} points)")
 
     if args.save_dir:
-        os.makedirs(args.save_dir, exist_ok=True)
-        model.save_pretrained(args.save_dir)
-        if hasattr(tokenizer, "hf_tokenizer"):
-            tokenizer.hf_tokenizer.save_pretrained(args.save_dir)
-        print(f"saved final checkpoint to {args.save_dir}/")
+        if select_examples:
+            # best-selection checkpoint already written through by log_point
+            print(f"kept BEST-selection checkpoint in {args.save_dir}/ "
+                  f"(select acc {best_select[0]:.3f})")
+        else:
+            _save_ckpt()
+            print(f"saved final checkpoint to {args.save_dir}/")
     return history
 
 
@@ -670,6 +703,12 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--train-file", default="benchmark_train.jsonl")
     ap.add_argument("--test-file", default="benchmark_test.jsonl")
+    ap.add_argument("--select-file", default=None, metavar="PATH",
+                    help="transfer-selection set (e.g. transfer_val.jsonl): "
+                         "scored at every eval point, and --save-dir keeps the "
+                         "best-selection checkpoint instead of the final one "
+                         "(the standard val saturates and does not predict "
+                         "real transfer)")
     ap.add_argument("--eval-every", type=int, default=1)
     ap.add_argument("--eval-max-actions", type=int, default=64)
     ap.add_argument("--device", default="auto",

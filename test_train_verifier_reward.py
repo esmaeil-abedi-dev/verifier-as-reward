@@ -71,7 +71,7 @@ def _args(**over):
                 clip_grad_norm=1.0, entropy_beta=0.0, balance_reward=False,
                 exact_pg=False, ce_loss=False, prompt_style="compact",
                 warm_start_from=None, kl_coef=0.0, consistency_kl=0.0,
-                consistency_ce_alt=False,
+                consistency_ce_alt=False, select_file=None,
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
@@ -424,6 +424,25 @@ def test_xtune_stage2_recipe_runs():
                for p in h1 if p["loss"] is not None)
     h2 = train(_args(**kw, log_file=os.path.join(_TMP.name, "x2.jsonl")))
     assert h1 == h2
+
+
+def test_select_file_keeps_best_checkpoint():
+    # with --select-file, every eval point scores the selection set and
+    # save_dir holds the BEST-selection checkpoint (write-through), not the
+    # final one; history carries select_accuracy
+    save = os.path.join(_TMP.name, "sel_ckpt")
+    h = train(_args(ce_loss=True, steps=3, lr=5e-3, save_dir=save,
+                    select_file=TEST_PATH,
+                    log_file=os.path.join(_TMP.name, "sel.jsonl")))
+    assert all("select_accuracy" in p for p in h)
+    assert any(p.get("select_checkpoint_saved") for p in h)
+    assert os.path.exists(os.path.join(save, "config.json"))
+    # deterministic
+    h2 = train(_args(ce_loss=True, steps=3, lr=5e-3, save_dir=None,
+                     select_file=TEST_PATH,
+                     log_file=os.path.join(_TMP.name, "sel2.jsonl")))
+    assert [p["select_accuracy"] for p in h] == \
+           [p["select_accuracy"] for p in h2]
 
 
 def test_consistency_kl_requires_ce_loss():
