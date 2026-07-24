@@ -218,14 +218,18 @@ def alt_notation_prompt(ex: dict, scheme: str, build) -> str:
 
 
 def symmetric_kl(lps_a: torch.Tensor, lps_b: torch.Tensor) -> torch.Tensor:
-    """Symmetric KL between the two decision softmaxes (R-Drop style), both
-    sides carrying gradient. Ties the model's verdict distribution across the
-    two notations of the same action."""
+    """Symmetric KL between the two decision softmaxes with STOP-GRADIENT
+    targets — xTune's KL_S(P,Q) = KL(sg(P)||Q) + KL(sg(Q)||P) (Zheng et al.,
+    ACL 2021, implemented via .detach()). Each direction pushes only the
+    student side toward a fixed target; without the stop-grad the augmented
+    view drags the canonical anchor's distribution around (the deviation that
+    broke the first consistency run)."""
     logp_a = torch.log_softmax(lps_a, dim=0)
     logp_b = torch.log_softmax(lps_b, dim=0)
-    kl_ab = (logp_a.exp() * (logp_a - logp_b)).sum()
-    kl_ba = (logp_b.exp() * (logp_b - logp_a)).sum()
-    return 0.5 * (kl_ab + kl_ba)
+    la, lb = logp_a.detach(), logp_b.detach()
+    kl_ab = (la.exp() * (la - logp_b)).sum()   # KL(sg(P) || Q): grads into Q
+    kl_ba = (lb.exp() * (lb - logp_a)).sum()   # KL(sg(Q) || P): grads into P
+    return kl_ab + kl_ba
 
 
 def reward_for_decision(decision: int, example: dict,
@@ -430,6 +434,7 @@ def train(args) -> list:
             # decision softmax: KL(pi || pi_ref) = sum_d pi(d) (logpi - logref).
             # Added to whichever objective loss is used below. 0 when disabled.
             kl_term = 0.0
+            ref_logp = None   # frozen-teacher distribution, reused below (R2)
             if ref_model is not None:
                 with torch.no_grad():
                     ref_lps = candidate_logprobs(
@@ -453,14 +458,21 @@ def train(args) -> list:
                 logp = torch.log_softmax(lps, dim=0)
                 w = class_weights[verdict] if class_weights else 1.0
                 loss = -w * logp[target_idx] / len(batch) + kl_term
-                # Consistency regularization (notation-invariance): CE stays on
-                # the canonical rendering above; here we ADD only a symmetric-KL
-                # tie between the canonical verdict distribution and the same
-                # action re-notated in another delimiter scheme. Putting the
-                # augmentation in the consistency term rather than in CE is the
-                # documented fix for fine-grained tasks, where augmenting the CE
-                # data instead degrades accuracy (Zheng et al., ACL 2021; R-Drop,
-                # Liang et al., NeurIPS 2021).
+                # Notation-consistency regularization, following xTune's
+                # stage-2 objective (Zheng et al., ACL 2021) faithfully:
+                #   L = L_task(D_A)                       [CE on BOTH views,
+                #                                          --consistency-ce-alt;
+                #                                          R-Drop applies NLL to
+                #                                          both passes too]
+                #     + lambda1 * KL_S(canonical, alt)    [R1: stop-grad symKL]
+                #     + lambda2 * KL(view || sg(teacher)) [R2: frozen stage-1
+                #                                          teacher = the released
+                #                                          CE model, via
+                #                                          --warm-start-from +
+                #                                          --kl-coef]
+                # The first consistency attempt deviated on all three counts
+                # (no stop-grad, no CE on the alt view, no frozen teacher) and
+                # collapsed; see REALTRACE_FINDINGS.md E5c.
                 if args.consistency_kl > 0:
                     scheme = rng.choice(CONSISTENCY_SCHEMES)
                     alt_lps = candidate_logprobs(
@@ -469,6 +481,18 @@ def train(args) -> list:
                     if torch.isfinite(alt_lps).all():
                         ckl = symmetric_kl(lps, alt_lps)
                         loss = loss + args.consistency_kl * ckl / len(batch)
+                        if args.consistency_ce_alt:
+                            # L_task on the augmented view — same verifier
+                            # verdict (re-notation is label-invariant, proven)
+                            alt_logp = torch.log_softmax(alt_lps, dim=0)
+                            loss = loss - w * alt_logp[target_idx] / len(batch)
+                        if ref_logp is not None:
+                            # R2 on the alt view: pin it to the frozen
+                            # teacher's canonical distribution
+                            alt_lgp = torch.log_softmax(alt_lps, dim=0)
+                            kl_alt = (alt_lgp.exp()
+                                      * (alt_lgp - ref_logp)).sum()
+                            loss = loss + args.kl_coef * kl_alt / len(batch)
                 loss.backward()
                 step_loss += loss.detach()
                 with torch.no_grad():
@@ -632,11 +656,17 @@ def main() -> None:
                          "refinement near the warm policy (0 disables)")
     ap.add_argument("--consistency-kl", type=float, default=0.0,
                     help="notation-invariance consistency regularization "
-                         "(with --ce-loss): CE on the canonical rendering plus "
-                         "this coefficient times a symmetric-KL tie to the same "
-                         "action re-notated in another delimiter scheme. Fixes "
-                         "notation brittleness without the over-authorization "
-                         "that augmenting the CE data causes (0 disables)")
+                         "(with --ce-loss): lambda1 on the stop-gradient "
+                         "symmetric KL (xTune KL_S) between the canonical "
+                         "rendering and the same action re-notated in another "
+                         "delimiter scheme (0 disables). xTune uses 5.0 for "
+                         "classification tasks")
+    ap.add_argument("--consistency-ce-alt", action="store_true",
+                    help="also apply the CE task loss to the re-notated view "
+                         "(xTune stage-2 L_task on augmented data; R-Drop "
+                         "applies NLL to both passes). Combine with "
+                         "--warm-start-from + --kl-coef so the frozen teacher "
+                         "(R2) anchors both views")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--train-file", default="benchmark_train.jsonl")
     ap.add_argument("--test-file", default="benchmark_test.jsonl")
@@ -662,6 +692,8 @@ def main() -> None:
         ap.error("--ce-loss and --exact-pg are mutually exclusive objectives")
     if args.consistency_kl > 0 and not args.ce_loss:
         ap.error("--consistency-kl requires --ce-loss (CE is the anchor view)")
+    if args.consistency_ce_alt and not args.consistency_kl > 0:
+        ap.error("--consistency-ce-alt requires --consistency-kl > 0")
     if args.kl_coef < 0:
         ap.error("--kl-coef must be >= 0")
 

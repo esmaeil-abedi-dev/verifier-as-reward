@@ -71,6 +71,7 @@ def _args(**over):
                 clip_grad_norm=1.0, entropy_beta=0.0, balance_reward=False,
                 exact_pg=False, ce_loss=False, prompt_style="compact",
                 warm_start_from=None, kl_coef=0.0, consistency_kl=0.0,
+                consistency_ce_alt=False,
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
@@ -355,6 +356,27 @@ def test_symmetric_kl_properties():
     assert a.grad is not None and torch.isfinite(a.grad).all()
 
 
+def test_symmetric_kl_stopgrad_targets():
+    # xTune KL_S: each direction's TARGET is detached — the gradient into one
+    # side must come only from the term where it is the student. Numerically:
+    # grad wrt `a` of KL(sg(b)||a) alone must equal grad wrt `a` of the full
+    # symmetric_kl(a, b) when b is a constant... more direct: compare against
+    # a hand-built stop-grad reference.
+    a = torch.tensor([1.0, -0.5], requires_grad=True)
+    b = torch.tensor([-0.3, 0.8], requires_grad=True)
+    symmetric_kl(a, b).backward()
+    ga, gb = a.grad.clone(), b.grad.clone()
+    # reference: grads of KL(sg(Q)||P) wrt P and KL(sg(P)||Q) wrt Q
+    a2 = a.detach().clone().requires_grad_(True)
+    b2 = b.detach().clone().requires_grad_(True)
+    la, lb = torch.log_softmax(a2, 0), torch.log_softmax(b2, 0)
+    lad, lbd = la.detach(), lb.detach()
+    ((lbd.exp() * (lbd - la)).sum()).backward()      # only student-P term
+    ((lad.exp() * (lad - lb)).sum()).backward()      # only student-Q term
+    assert torch.allclose(ga, a2.grad, atol=1e-6), (ga, a2.grad)
+    assert torch.allclose(gb, b2.grad, atol=1e-6), (gb, b2.grad)
+
+
 def test_alt_notation_prompt_relabels_but_verdict_invariant():
     # the alt view re-notates resources (colon), and the verifier verdict on the
     # re-notated trace is unchanged -> the CE target is identical across views
@@ -383,6 +405,24 @@ def test_consistency_kl_runs_and_updates_and_deterministic():
     h2 = train(_args(ce_loss=True, balance_reward=True, consistency_kl=1.0,
                      steps=3, lr=5e-3,
                      log_file=os.path.join(_TMP.name, "ck2.jsonl")))
+    assert h1 == h2
+
+
+def test_xtune_stage2_recipe_runs():
+    # the full faithful recipe: warm-start student from a stage-1 checkpoint,
+    # frozen-teacher KL (R2, --kl-coef), stop-grad consistency (R1), and CE on
+    # BOTH views (--consistency-ce-alt). Runs, finite, deterministic.
+    stage1 = os.path.join(_TMP.name, "stage1_ckpt")
+    train(_args(ce_loss=True, save_dir=stage1, steps=3, lr=5e-3,
+                log_file=os.path.join(_TMP.name, "s1.jsonl")))
+    kw = dict(ce_loss=True, balance_reward=True, warm_start_from=stage1,
+              kl_coef=5.0, consistency_kl=5.0, consistency_ce_alt=True,
+              steps=3, lr=1e-3)
+    h1 = train(_args(**kw, log_file=os.path.join(_TMP.name, "x1.jsonl")))
+    assert [p["step"] for p in h1] == [0, 1, 2, 3]
+    assert all(torch.isfinite(torch.tensor(p["loss"]))
+               for p in h1 if p["loss"] is not None)
+    h2 = train(_args(**kw, log_file=os.path.join(_TMP.name, "x2.jsonl")))
     assert h1 == h2
 
 
