@@ -184,18 +184,43 @@ the *same* data that exposed it; Toucan-mixed = the model recognizes real
 authorized calls from a *different* source across *varied* real notations —
 the transfer claim generalizes beyond tau2's three domains and one notation.
 
-**Result (fill after the Colab run `colab_augment.ipynb`, 3 seeds, Wilson CIs):**
+**Result — balanced 4-way augmentation BACKFIRED (3 seeds, Wilson CIs).**
 
-| model | committed test | tau2 slash | tau2 colon | Toucan mixed (f-refuse) |
+| model | committed test | tau2 slash | tau2 colon | Toucan mixed |
 |---|---|---|---|---|
-| released CE-0.5B (single notation) | 0.975 | 90.8% | ~55% (brittle) | _pending_ |
-| augmented CE-0.5B (mixed notation) | _pending_ | _pending_ | _pending_ | _pending_ |
+| **released** (single notation) | 97.5% | **90.8%** [87.5,93.2] | **75.0%** [70.5,79.0] | 98.1% (fref 1.9%) |
+| **balanced-mix** (mean of 3 seeds) | 99.6% | 75.6% | 72.0% | 99.1% (fref ~1%) |
 
-Claim to make **only if** the augmented model holds up on both tau2 notations
-and Toucan: the notation brittleness is **not fundamental** — training across
-representations closes it, at no cost to the committed-test accuracy, and
-generalizes to an independent real source. If colon/Toucan still lag, report
-that honestly as a residual limit with the normalize-at-deployment mitigation.
+Balanced augmentation **equalized the notations by leveling slash down**
+(90.8→75.6) rather than lifting colon up (75.0→72.0), and on the balanced real
+tau2 set it drove **false-authorize to ~50%** (vs the released model's 18.5% on
+slash) — it learned a looser notion of resource identity and now over-authorizes
+foreign-customer redirects. The synthetic→real accuracy gap on the same slash
+notation **tripled** (released 97.5→90.8, drop 6.7; balanced 99.6→75.6, drop 24)
+— a clean overfitting signature: the mixed-notation model fits the augmented
+*synthetic* corpus better but transfers to real data much worse. (Toucan's ~99%
+is authorized-only, so it only confirms the model does not over-*refuse*; it
+cannot penalize the over-*authorization*, so it is not the discriminating test —
+tau2 is.)
+
+**Correction to the representation-sensitivity table above:** the clean
+full-set released-model colon score is **75.0%** [70.5,79.0] on 400 balanced
+actions, not the ~55% first reported (that early figure came from an ad-hoc
+probe combined with the wildcard-grant bug). The real brittleness is milder:
+90.8% slash → 75.0% colon, a ~16-pt notation gap.
+
+**Follow-up — canonical-majority mix (`--canonical-frac 0.7`).** Keep the trained
+slash notation as the 70% majority (30% split across other notations) so resource
+discrimination stays sharp while adding notation tolerance. Hypothesis: slash
+recovers toward ~90% and colon rises above the balanced ~72%. Result _pending_
+the next `colab_augment.ipynb` run (trains both variants; 3-way table).
+
+**What to claim, by outcome:**
+- if canonical-majority recovers slash **and** lifts colon → the brittleness is
+  fixable with a *light* notation tail (the naive even mix over-corrects).
+- if it recovers slash but colon still lags → augmentation is not the fix;
+  report the honest negative and recommend **normalize-at-deployment** (map real
+  inputs to the trained notation, where the released model already scores 90.8%).
 
 ## Deliverables
 - `map_tau_to_chain.py` (+ `test_map_tau_to_chain.py`, offline), `colab_realtrace.ipynb`
