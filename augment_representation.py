@@ -87,16 +87,39 @@ def label_preserved(trace: dict) -> bool:
                for a, aj in zip(actions, trace["actions"]))
 
 
-def augment(traces: list, seed: int, schemes: list = None):
-    """Each trace re-notated under a randomly chosen scheme (schemes cycled so
-    the mix is balanced). Returns (augmented_traces, n_discarded)."""
+def _assignment(n: int, schemes: list, canonical_frac, rng) -> list:
+    """A length-n list of schemes to assign. Balanced (even cycle) when
+    `canonical_frac` is None; otherwise `canonical` gets that fraction and the
+    remaining schemes split the rest evenly. Deterministic given `rng`."""
+    if canonical_frac is None:
+        return [schemes[i % len(schemes)] for i in range(n)]
+    if "canonical" not in schemes:
+        raise ValueError("canonical_frac needs 'canonical' in schemes")
+    others = [s for s in schemes if s != "canonical"]
+    n_canon = round(canonical_frac * n)
+    rem = n - n_canon
+    counts = {"canonical": n_canon}
+    for i, s in enumerate(others):
+        counts[s] = rem // len(others) + (1 if i < rem % len(others) else 0)
+    assign = [s for s, c in counts.items() for _ in range(c)]
+    rng.shuffle(assign)
+    return assign
+
+
+def augment(traces: list, seed: int, schemes: list = None,
+            canonical_frac=None):
+    """Each trace re-notated under a chosen scheme. By default schemes are
+    balanced (even cycle); pass `canonical_frac` (e.g. 0.7) to keep the trained
+    slash notation as the majority and split the rest across the other schemes
+    — this preserves sharp resource discrimination while adding notation
+    tolerance. Returns (augmented_traces, n_discarded)."""
     schemes = schemes or list(SCHEMES)
     rng = random.Random(seed)
     order = list(traces)
     rng.shuffle(order)
+    assign = _assignment(len(order), schemes, canonical_frac, rng)
     out, discarded = [], 0
-    for i, tr in enumerate(order):
-        scheme = schemes[i % len(schemes)]
+    for tr, scheme in zip(order, assign):
         aug = renotate_trace(tr, scheme)
         if label_preserved(aug):      # guard: notation must not change verdicts
             out.append(aug)
@@ -113,6 +136,10 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=33)
     ap.add_argument("--schemes", default=",".join(SCHEMES),
                     help="comma-separated notation schemes to mix")
+    ap.add_argument("--canonical-frac", type=float, default=None,
+                    help="fraction of traces kept in the trained canonical "
+                         "(slash) notation; the rest split across the other "
+                         "schemes (e.g. 0.7). Omit for a balanced mix.")
     args = ap.parse_args()
 
     schemes = [s.strip() for s in args.schemes.split(",") if s.strip()]
@@ -121,7 +148,8 @@ def main() -> None:
         raise SystemExit(f"unknown schemes {unknown}; available {list(SCHEMES)}")
 
     traces = load_traces(args.in_file)
-    aug, discarded = augment(traces, args.seed, schemes)
+    aug, discarded = augment(traces, args.seed, schemes,
+                             canonical_frac=args.canonical_frac)
     write_jsonl(aug, args.out)
     from collections import Counter
     dist = Counter(t["_notation"] for t in aug)

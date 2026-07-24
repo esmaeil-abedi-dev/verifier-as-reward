@@ -78,6 +78,22 @@ def test_augment_mixes_and_preserves():
     assert aug == aug2
 
 
+def test_canonical_majority_mix():
+    # canonical_frac keeps the trained slash notation as the majority; the
+    # rest split across the other schemes; labels still invariant, 0 discarded
+    big = TEST * 8  # enough traces for stable proportions
+    aug, discarded = augment(big, seed=5, canonical_frac=0.7)
+    assert discarded == 0
+    from collections import Counter
+    dist = Counter(t["_notation"] for t in aug)
+    canon_frac = dist["canonical"] / len(aug)
+    assert 0.66 <= canon_frac <= 0.74, canon_frac        # ~70% canonical
+    assert set(dist) == set(SCHEMES)                       # others still present
+    # deterministic
+    aug2, _ = augment(big, seed=5, canonical_frac=0.7)
+    assert aug == aug2
+
+
 def test_structure_otherwise_unchanged():
     # only resource strings change; actions/timing/principals identical
     by = {t["trace_id"]: t for t in TEST}
