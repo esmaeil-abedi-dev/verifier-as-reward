@@ -127,6 +127,51 @@ related-work paragraph and need breadth beyond the six sources above.
 
 ---
 
+## 6b. Format/notation robustness — grounding the E5b fix
+
+The E5 real-trace work surfaced a *representation-sensitivity* finding: the
+verifier-CE model transfers to real tool-call vocabulary but is brittle to how
+resources are *notated* (90.8% slash → 75.0% colon on the same real tau2 data).
+Three papers frame both the phenomenon and the fix.
+
+**Sclar, Choi, Tsvetkov, Suhr — "Quantifying Language Models' Sensitivity to
+Spurious Features in Prompt Design" (ICLR 2024; arXiv:2310.11324; *FormatSpread*).**
+- LLMs are extremely sensitive to spurious surface format (separators, spacing,
+  casing) — up to ~76 accuracy points across semantically-equivalent formats —
+  and the sensitivity **persists with scale, more shots, and instruction
+  tuning.** Grounds our notation gap as the documented failure mode, not a bug;
+  recommends reporting a **range across formats** (which our Wilson-CI, multi-
+  notation tables already do).
+
+**Zheng, Dong, Huang, et al. — "Consistency Regularization for Cross-Lingual
+Fine-Tuning" (ACL 2021; doi:10.18653/v1/2021.acl-long.264).**
+- **The load-bearing result for us:** using data augmentation for *conventional
+  fine-tuning* **degrades fine-grained tasks**, whereas using the *same*
+  augmentation for **consistency regularization** improves by a large margin.
+  This is exactly what we observed: naive notation augmentation (CE on
+  re-notated data) collapsed our fine-grained confused-deputy task
+  (over-authorization, seed instability); the prescribed fix is to move the
+  augmentation into a consistency term and keep the task loss on the original.
+
+**Liang, Wu, et al. — "R-Drop: Regularized Dropout for Neural Networks"
+(NeurIPS 2021; arXiv:2106.14448).**
+- Consistency via **bidirectional (symmetric) KL** between two forward passes of
+  the same input. We adopt the mechanism with the two "views" being two
+  *notations* of the same action rather than two dropout masks — the
+  `--consistency-kl` mode: `L = CE(canonical) + λ·symKL(canonical ‖ renotated)`.
+- (Complementary: Miao et al., "Regularising for invariance to data
+  augmentation improves supervised learning," arXiv:2203.03304 — augmentation-
+  *invariance* regularization beats naive augmentation and tolerates mis-
+  specified augmentations, the same principle.)
+
+**Mapped to our E5b results:** balanced / canonical-majority augmentation =
+"augmentation for conventional fine-tuning" → degradation (Zheng et al.
+predicts it); `--consistency-kl` = "augmentation for consistency regularization"
+→ the expected fix, with input-canonicalization (Sclar et al.'s report-across-
+formats spirit) as the deterministic deployment fallback.
+
+---
+
 ## 7. Synthesis — what "RL + something else" should be, mapped to our failures
 
 | our observed failure | literature's diagnosis | the fix |
@@ -179,7 +224,27 @@ both stages.
 7. GRPO Training Pipeline: SFT to RL for Better Reasoning.
    https://langcopilot.com/posts/2025-09-05-grpo-training-pipeline-sft-rl-better
 
+Format-robustness / consistency regularization (§6b):
+
+8. Sclar, M., Choi, Y., Tsvetkov, Y., & Suhr, A. *Quantifying Language Models'
+   Sensitivity to Spurious Features in Prompt Design or: How I learned to start
+   worrying about prompt formatting.* ICLR 2024. arXiv:2310.11324.
+   https://doi.org/10.48550/arXiv.2310.11324
+9. Zheng, B., Dong, L., Huang, S., Wang, W., Chi, Z., Singhal, S., Che, W., Liu,
+   T., Song, X., & Wei, F. *Consistency Regularization for Cross-Lingual
+   Fine-Tuning.* ACL-IJCNLP 2021. https://doi.org/10.18653/v1/2021.acl-long.264
+10. Liang, X., Wu, L., Li, J., Wang, Y., Meng, Q., Qin, T., Chen, W., Zhang, M.,
+    & Liu, T.-Y. *R-Drop: Regularized Dropout for Neural Networks.* NeurIPS 2021.
+    arXiv:2106.14448. https://doi.org/10.48550/arXiv.2106.14448
+11. Miao, N., Rainforth, T., Mathieu, E., et al. *Learning Instance-Specific
+    Augmentations by Capturing Local Invariances* / *Regularising for invariance
+    to data augmentation improves supervised learning.* arXiv:2203.03304.
+    https://doi.org/10.48550/arXiv.2203.03304
+
 *Note: items 1, 3, 4 are peer-reviewable arXiv preprints suitable for direct
 citation; items 2, 5, 7 are technical blog posts (use for background/rationale,
 prefer the underlying papers — the DeepSeek-R1 and GRPO source papers — for
-formal citations); item 6 is a link collection.*
+formal citations); item 6 is a link collection. Items 8–10 are peer-reviewed
+(ICLR/ACL/NeurIPS) and are the formal citations for the E5b notation-robustness
+method; item 11 is an arXiv preprint used for the invariance-regularization
+principle.*

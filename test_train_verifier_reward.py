@@ -23,8 +23,11 @@ import torch
 from authority_verifier import label_action
 from trace_benchmark import generate_corpus, write_jsonl
 from train_verifier_reward import (
+    CONSISTENCY_SCHEMES,
     DECISIONS,
     ByteTokenizer,
+    alt_notation_prompt,
+    build_fn_for,
     build_model_and_tokenizer,
     candidate_logprobs,
     compact_prompt,
@@ -34,6 +37,7 @@ from train_verifier_reward import (
     load_examples,
     make_checkpoint_backend,
     reward_for_decision,
+    symmetric_kl,
     train,
 )
 
@@ -66,7 +70,7 @@ def _args(**over):
                 eval_max_actions=8, device="cpu", save_dir=None,
                 clip_grad_norm=1.0, entropy_beta=0.0, balance_reward=False,
                 exact_pg=False, ce_loss=False, prompt_style="compact",
-                warm_start_from=None, kl_coef=0.0,
+                warm_start_from=None, kl_coef=0.0, consistency_kl=0.0,
                 log_file=os.path.join(_TMP.name, "training_log.jsonl"))
     base.update(over)
     return argparse.Namespace(**base)
@@ -334,6 +338,65 @@ def test_ce_loss_flag_runs_and_deterministic():
     h2 = train(_args(ce_loss=True, balance_reward=True,
                      log_file=os.path.join(_TMP.name, "ce2.jsonl")))
     assert h1 == h2
+
+
+# --- consistency regularization (notation-invariance) ----------------------
+
+def test_symmetric_kl_properties():
+    a = torch.tensor([2.0, -1.0], requires_grad=True)
+    # identical distributions -> zero KL
+    assert float(symmetric_kl(a, a.detach().clone())) == 0.0
+    b = torch.tensor([-1.0, 2.0])
+    k_ab = float(symmetric_kl(a.detach(), b))
+    k_ba = float(symmetric_kl(b, a.detach()))
+    assert k_ab > 0 and abs(k_ab - k_ba) < 1e-6      # positive and symmetric
+    # carries gradient back to the inputs
+    symmetric_kl(a, b).backward()
+    assert a.grad is not None and torch.isfinite(a.grad).all()
+
+
+def test_alt_notation_prompt_relabels_but_verdict_invariant():
+    # the alt view re-notates resources (colon), and the verifier verdict on the
+    # re-notated trace is unchanged -> the CE target is identical across views
+    exs = load_examples(TEST_PATH, "compact")
+    build = build_fn_for("compact")
+    ex = next(e for e in exs if "/" in e["prompt"])  # has a slash resource
+    alt = alt_notation_prompt(ex, "allcolon", build)
+    assert alt != ex["prompt"]
+    from augment_representation import renotate_trace
+    from trace_benchmark import trace_to_objects
+    root, chain, actions = trace_to_objects(renotate_trace(ex["trace"], "allcolon"))
+    a = actions[ex["act_idx"]]
+    assert (label_action(a, chain, root)
+            == label_action(ex["action"], ex["chain"], ex["root"]))
+
+
+def test_consistency_kl_runs_and_updates_and_deterministic():
+    save = os.path.join(_TMP.name, "ck_ckpt")
+    h1 = train(_args(ce_loss=True, balance_reward=True, consistency_kl=1.0,
+                     steps=3, lr=5e-3, save_dir=save,
+                     log_file=os.path.join(_TMP.name, "ck1.jsonl")))
+    assert [p["step"] for p in h1] == [0, 1, 2, 3]
+    assert all(torch.isfinite(torch.tensor(p["loss"]))
+               for p in h1 if p["loss"] is not None)
+    # deterministic given the seed (alt-scheme draw uses the seeded rng)
+    h2 = train(_args(ce_loss=True, balance_reward=True, consistency_kl=1.0,
+                     steps=3, lr=5e-3,
+                     log_file=os.path.join(_TMP.name, "ck2.jsonl")))
+    assert h1 == h2
+
+
+def test_consistency_kl_requires_ce_loss():
+    # the CLI rejects --consistency-kl without --ce-loss (CE is the anchor)
+    import subprocess
+    r = subprocess.run(
+        ["python3", "train_verifier_reward.py", "--model", "tiny",
+         "--consistency-kl", "1.0", "--steps", "1",
+         "--train-file", TRAIN_PATH, "--test-file", TEST_PATH,
+         "--device", "cpu"],
+        capture_output=True, text=True, env=dict(os.environ, PYTHONPATH="."))
+    assert r.returncode != 0
+    assert "requires --ce-loss" in (r.stderr + r.stdout)
 
 
 def test_nl_prompt_style():

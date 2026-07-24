@@ -176,15 +176,56 @@ def load_examples(path: str, prompt_style: str = "compact") -> list:
     examples = []
     for tr in load_traces(path):
         root, chain, actions = trace_to_objects(tr)
-        for act, aj in zip(actions, tr["actions"]):
+        for i, (act, aj) in enumerate(zip(actions, tr["actions"])):
             examples.append({
                 "prompt": build(tr, aj) if build else compact_prompt(tr, aj),
                 "action": act,
                 "chain": chain,
                 "root": root,
                 "scenario_class": tr["scenario_class"],
+                # kept so a consistency-regularization view can be re-rendered
+                # in another notation on the fly (trace + this action's index)
+                "trace": tr,
+                "act_idx": i,
             })
     return examples
+
+
+# --------------------------------------------------------------------------
+# Consistency regularization (notation-invariance)
+# --------------------------------------------------------------------------
+
+# non-canonical delimiter schemes used for the consistency view; the CE anchor
+# always stays on the canonical rendering (see train()).
+CONSISTENCY_SCHEMES = ("allcolon", "allslash", "pipe")
+
+
+def build_fn_for(prompt_style: str):
+    """The prompt builder matching `prompt_style` (mirrors load_examples)."""
+    if prompt_style == "nl":
+        from eval_harness import build_prompt
+        return build_prompt
+    return compact_prompt
+
+
+def alt_notation_prompt(ex: dict, scheme: str, build) -> str:
+    """`ex` re-rendered in `scheme`: re-notate its trace (label-invariant) and
+    rebuild the prompt for the same action. The verdict is unchanged, so the CE
+    target is identical across views — only the surface notation differs."""
+    from augment_representation import renotate_trace
+    alt_tr = renotate_trace(ex["trace"], scheme)
+    return build(alt_tr, alt_tr["actions"][ex["act_idx"]])
+
+
+def symmetric_kl(lps_a: torch.Tensor, lps_b: torch.Tensor) -> torch.Tensor:
+    """Symmetric KL between the two decision softmaxes (R-Drop style), both
+    sides carrying gradient. Ties the model's verdict distribution across the
+    two notations of the same action."""
+    logp_a = torch.log_softmax(lps_a, dim=0)
+    logp_b = torch.log_softmax(lps_b, dim=0)
+    kl_ab = (logp_a.exp() * (logp_a - logp_b)).sum()
+    kl_ba = (logp_b.exp() * (logp_b - logp_a)).sum()
+    return 0.5 * (kl_ab + kl_ba)
 
 
 def reward_for_decision(decision: int, example: dict,
@@ -322,6 +363,10 @@ def train(args) -> list:
         ref_model.requires_grad_(False)
 
     train_examples = load_examples(args.train_file, args.prompt_style)
+    build_fn = build_fn_for(args.prompt_style)  # for consistency alt-views
+    if args.consistency_kl > 0:
+        print(f"consistency regularization: lambda={args.consistency_kl}, "
+              f"schemes={CONSISTENCY_SCHEMES} (CE stays on canonical)")
     class_weights = (compute_class_weights(train_examples)
                      if args.balance_reward else None)
     if class_weights:
@@ -408,6 +453,22 @@ def train(args) -> list:
                 logp = torch.log_softmax(lps, dim=0)
                 w = class_weights[verdict] if class_weights else 1.0
                 loss = -w * logp[target_idx] / len(batch) + kl_term
+                # Consistency regularization (notation-invariance): CE stays on
+                # the canonical rendering above; here we ADD only a symmetric-KL
+                # tie between the canonical verdict distribution and the same
+                # action re-notated in another delimiter scheme. Putting the
+                # augmentation in the consistency term rather than in CE is the
+                # documented fix for fine-grained tasks, where augmenting the CE
+                # data instead degrades accuracy (Zheng et al., ACL 2021; R-Drop,
+                # Liang et al., NeurIPS 2021).
+                if args.consistency_kl > 0:
+                    scheme = rng.choice(CONSISTENCY_SCHEMES)
+                    alt_lps = candidate_logprobs(
+                        model, tokenizer,
+                        alt_notation_prompt(ex, scheme, build_fn), device)
+                    if torch.isfinite(alt_lps).all():
+                        ckl = symmetric_kl(lps, alt_lps)
+                        loss = loss + args.consistency_kl * ckl / len(batch)
                 loss.backward()
                 step_loss += loss.detach()
                 with torch.no_grad():
@@ -569,6 +630,13 @@ def main() -> None:
                     help="KL penalty coefficient toward a frozen reference "
                          "policy (the warm-start checkpoint), keeping RL "
                          "refinement near the warm policy (0 disables)")
+    ap.add_argument("--consistency-kl", type=float, default=0.0,
+                    help="notation-invariance consistency regularization "
+                         "(with --ce-loss): CE on the canonical rendering plus "
+                         "this coefficient times a symmetric-KL tie to the same "
+                         "action re-notated in another delimiter scheme. Fixes "
+                         "notation brittleness without the over-authorization "
+                         "that augmenting the CE data causes (0 disables)")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--train-file", default="benchmark_train.jsonl")
     ap.add_argument("--test-file", default="benchmark_test.jsonl")
@@ -592,6 +660,8 @@ def main() -> None:
 
     if args.ce_loss and args.exact_pg:
         ap.error("--ce-loss and --exact-pg are mutually exclusive objectives")
+    if args.consistency_kl > 0 and not args.ce_loss:
+        ap.error("--consistency-kl requires --ce-loss (CE is the anchor view)")
     if args.kl_coef < 0:
         ap.error("--kl-coef must be >= 0")
 

@@ -239,9 +239,51 @@ notation deployments, is the recommended configuration. This is a useful
 negative result: it delimits *how* to buy robustness here (preprocess, don't
 augment).
 
-**Reproduce:** `colab_augment.ipynb` (trains balanced + canonical-majority × 3
-seeds, evaluates released vs both on all held-out real tests, prints the 3-way
-table). `results_augment.json` + `training_log_{balanced,cmaj}_seed*.jsonl`.
+**Reproduce:** `colab_augment.ipynb` (the negative variants are commented in
+Step 2; uncomment to re-run). `results_augment.json` +
+`training_log_{balanced,cmaj}_seed*.jsonl`.
+
+---
+
+## The grounded fix — consistency regularization (E5c)
+
+The augmentation failure is a *known, named* one, which points to the fix. LLM
+format-sensitivity is documented (Sclar et al., ICLR 2024): surface-format
+changes swing accuracy by large margins and the sensitivity survives scale and
+tuning. More precisely, Zheng et al. (ACL 2021) show that using augmentation for
+**conventional fine-tuning degrades fine-grained tasks**, while using the *same*
+augmentation for **consistency regularization** improves them by a large margin.
+Our confused-deputy task is fine-grained (`cust:0/…` vs `cust:5/…`), and we did
+exactly the thing their result warns against — CE on re-notated data. The fix is
+to move the notation signal out of CE and into a consistency term.
+
+**Method (`--consistency-kl`, implemented in `train_verifier_reward.py`).** Per
+training action:
+- CE loss on the **canonical** (slash) rendering — unchanged, so the sharp
+  discrimination that gives 90.8% is preserved (this is the anchor).
+- **plus** `λ · symKL( p(·|canonical) ‖ p(·|renotated) )` — a symmetric-KL tie
+  (R-Drop; Liang et al., NeurIPS 2021) between the model's AUTHORIZE/REFUSE
+  distribution on the canonical view and on the *same action re-notated* in a
+  random non-canonical scheme. Re-notation is label-invariant (proven), so both
+  views share the verifier's verdict; the KL teaches "give the same answer
+  regardless of delimiter," not a looser resource-matching.
+
+Why this should reach the target where augmentation didn't: CE never sees the
+off-notation data (no dilution → no over-authorization, no seed collapse), and
+the KL pulls the colon/pipe distribution onto the canonical (correct) one.
+Predicted: slash stays ~90% and colon rises toward it (~85%+), stable across
+seeds. Result _pending_ the `colab_augment.ipynb` run (default variant now
+`consistency`, 3 seeds; `training_log_consistency_seed*.jsonl`).
+
+**Deterministic complement (always available).** Because we choose the notation
+when mapping real logs into the schema, the deployment mitigation is **input
+canonicalization** — emit the trained slash notation, i.e. the stable 90.8%
+column — with zero retraining. Consistency-reg is the model-side contribution
+that removes the need to normalize; canonicalization is the guaranteed fallback.
+
+**Grounding:** Sclar et al. (ICLR 2024, arXiv:2310.11324); Zheng et al. (ACL
+2021, doi:10.18653/v1/2021.acl-long.264); Liang et al. (R-Drop, NeurIPS 2021,
+arXiv:2106.14448). See `RELATED_WORK_AND_DIRECTIONS.md` §6b.
 
 ## Deliverables
 - `map_tau_to_chain.py` (+ `test_map_tau_to_chain.py`, offline), `colab_realtrace.ipynb`
