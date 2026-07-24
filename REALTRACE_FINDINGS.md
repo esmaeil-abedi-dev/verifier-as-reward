@@ -209,18 +209,39 @@ actions, not the ~55% first reported (that early figure came from an ad-hoc
 probe combined with the wildcard-grant bug). The real brittleness is milder:
 90.8% slash → 75.0% colon, a ~16-pt notation gap.
 
-**Follow-up — canonical-majority mix (`--canonical-frac 0.7`).** Keep the trained
-slash notation as the 70% majority (30% split across other notations) so resource
-discrimination stays sharp while adding notation tolerance. Hypothesis: slash
-recovers toward ~90% and colon rises above the balanced ~72%. Result _pending_
-the next `colab_augment.ipynb` run (trains both variants; 3-way table).
+**Follow-up — canonical-majority mix (`--canonical-frac 0.7`) also failed
+(3 seeds).** Keeping the trained slash notation as the 70% majority did **not**
+recover discrimination; it did not even help over the balanced mix. The real
+finding is **instability**: both augmented variants swing wildly across seeds on
+the real tau2 set, and one canonical-majority seed collapsed to near-
+always-authorize.
 
-**What to claim, by outcome:**
-- if canonical-majority recovers slash **and** lifts colon → the brittleness is
-  fixable with a *light* notation tail (the naive even mix over-corrects).
-- if it recovers slash but colon still lags → augmentation is not the fix;
-  report the honest negative and recommend **normalize-at-deployment** (map real
-  inputs to the trained notation, where the released model already scores 90.8%).
+| variant | committed | tau2-slash (per seed, acc%) | tau2-colon (per seed) |
+|---|---|---|---|
+| **released** (single notation) | 97.5% | **90.8** (stable, fauth 18.5) | 75.0 (fauth 50) |
+| balanced 4-way | 96.2% | 60.5 / 81.0 / 65.8 (fauth 38–79) | 63.7 / 82.5 / 63.2 |
+| canonical-majority 0.7 | 98.8% | 78.2 / 72.5 / **50.2** (seed9 fauth 99.5) | 76.5 / 70.2 / **50.0** (fauth 100) |
+
+All variants keep committed-test ≈96–100% and Toucan (authorized-only) ≈99%,
+while real-tau2 accuracy ranges from 50% (collapse) to 81% — never reaching the
+released model's stable 90.8%. Augmentation converges on the *synthetic*
+distribution but makes real-vocabulary transfer a **seed lottery**, biased toward
+over-authorization (false-authorize climbs from 18.5% to 38–100%).
+
+**Conclusion (the honest, decisive result).** For this 0.5B verifier-CE setup,
+resource-notation robustness should be handled by **normalizing real inputs to
+the trained notation at deployment**, *not* by notation data-augmentation.
+Augmentation trades a modest, well-characterized notation gap (90.8% slash →
+75.0% colon) for large seed instability, over-authorization, and occasional
+collapse — a strictly worse, less reliable model. The released single-notation
+model at **90.8% (stable)** on real tau2, plus input normalization for off-
+notation deployments, is the recommended configuration. This is a useful
+negative result: it delimits *how* to buy robustness here (preprocess, don't
+augment).
+
+**Reproduce:** `colab_augment.ipynb` (trains balanced + canonical-majority × 3
+seeds, evaluates released vs both on all held-out real tests, prints the 3-way
+table). `results_augment.json` + `training_log_{balanced,cmaj}_seed*.jsonl`.
 
 ## Deliverables
 - `map_tau_to_chain.py` (+ `test_map_tau_to_chain.py`, offline), `colab_realtrace.ipynb`
