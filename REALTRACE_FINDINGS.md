@@ -139,10 +139,71 @@ Released CE-0.5B vs the lexical-heuristic floor on the mapped real traces
 
 ---
 
+## The fix — representation augmentation + a second independent real source (E5b)
+
+The representation-sensitivity finding above raises the obvious follow-up: is
+the brittleness *fundamental*, or just an artifact of training on a single
+notation? E5b answers it, and adds a second independent real corpus so the
+transfer claim is not a tau2 artifact.
+
+**Method (augmentation).** `augment_representation.py` re-notates each training
+trace under a random delimiter scheme — `canonical` (`family:namespace/leaf`),
+`allcolon`, `allslash`, `pipe` — applied *consistently* to every resource
+string in the trace (root scope, every hop's scope, every action). Because the
+verifier's `fnmatch`/subsumption logic special-cases only glob metacharacters
+(`*?[]`) and never the delimiters `:`/`/`, a consistent substitution **preserves
+every verdict**; the mapper re-verifies with `label_action` and discards
+(counting) any trace whose label changes — **0 discarded on 2400 actions**.
+CE is retrained on the mixed-notation corpus.
+
+**Data hygiene (held out properly).**
+- **train** = `augmented_train` (expanded corpus seed 101, re-notated seed 33).
+- **val** = `augmented_val` (expanded corpus seed **202**, re-notated seed 34) —
+  a different seed, deduplicated at the decision-context level against both
+  train and the committed test; augmented so monitoring reflects the
+  mixed-notation distribution. Re-notation changes only the surface, not the
+  `(root, chain, action)` decision context dedup was computed on, so it
+  introduces no new leakage.
+- **test** (never seen in training), two independent real logs:
+  - **tau2** balanced confused-deputy set, in both slash (trained) and colon
+    (naive) notation.
+  - **Toucan** (`Agent-Ark/Toucan-1.5M`, Apache-2.0) — a **second, independent**
+    real MCP corpus of thousands of distinct servers (web search, Unity,
+    finance, trivia, …). `map_toucan_to_chain.py` maps each trajectory to a
+    single-session chain (`sess:*` → `sess:<sid>/*`, specific-tool grants),
+    every real `function_call` becoming an **authorized** in-scope action
+    (resource `sess:<sid>/<leaf>`, leaf = slug of the call's primary real arg).
+    Toucan is good-behavior data, so this is a **recognition test**
+    (false-refuse on real legitimate calls), rendered in **mixed native
+    notations** via `augment()` — real vocabulary *and* real formats at once.
+    An optional `--redirect` flag adds foreign-session confused-deputy negatives
+    for a balanced accuracy number.
+
+**What each source proves.** tau2-both-notations = the brittleness is fixed on
+the *same* data that exposed it; Toucan-mixed = the model recognizes real
+authorized calls from a *different* source across *varied* real notations —
+the transfer claim generalizes beyond tau2's three domains and one notation.
+
+**Result (fill after the Colab run `colab_augment.ipynb`, 3 seeds, Wilson CIs):**
+
+| model | committed test | tau2 slash | tau2 colon | Toucan mixed (f-refuse) |
+|---|---|---|---|---|
+| released CE-0.5B (single notation) | 0.975 | 90.8% | ~55% (brittle) | _pending_ |
+| augmented CE-0.5B (mixed notation) | _pending_ | _pending_ | _pending_ | _pending_ |
+
+Claim to make **only if** the augmented model holds up on both tau2 notations
+and Toucan: the notation brittleness is **not fundamental** — training across
+representations closes it, at no cost to the committed-test accuracy, and
+generalizes to an independent real source. If colon/Toucan still lag, report
+that honestly as a residual limit with the normalize-at-deployment mitigation.
+
 ## Deliverables
 - `map_tau_to_chain.py` (+ `test_map_tau_to_chain.py`, offline), `colab_realtrace.ipynb`
-- `real_trace_{telecom,airline,retail,all}.jsonl` (gitignored; regenerate from seed 5)
-- `results_realtrace.json` (per-domain + combined, +Wilson CIs)
+- `map_toucan_to_chain.py` (+ `test_map_toucan.py`, offline, 7 tests) — second real source
+- `augment_representation.py` (+ `test_augment_representation.py`), `colab_augment.ipynb`
+- `real_trace_{telecom,airline,retail,all}.jsonl`, `real_toucan_{all,mixed}.jsonl`
+  (gitignored; regenerate from seed 5 / seed 9)
+- `results_realtrace.json`, `results_augment.json` (per-test + Wilson CIs)
 - AgentDojo (native prompt-injection threat model) is cited as complementary
   future work, not run — a different formalism that would force verdict-vs-label
   reconciliation.

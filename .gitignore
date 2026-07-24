@@ -18,4 +18,6 @@ noisy_test.jsonl
 real_trace_*.jsonl
 predictions_*.jsonl
 augmented_train.jsonl
+augmented_val.jsonl
 real_trace_all_colon.jsonl
+real_toucan_*.jsonl
