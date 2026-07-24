@@ -159,10 +159,10 @@ Fine-Tuning" (ACL 2021; doi:10.18653/v1/2021.acl-long.264).**
   the same input. We adopt the mechanism with the two "views" being two
   *notations* of the same action rather than two dropout masks — the
   `--consistency-kl` mode: `L = CE(canonical) + λ·symKL(canonical ‖ renotated)`.
-- (Complementary: Miao et al., "Regularising for invariance to data
-  augmentation improves supervised learning," arXiv:2203.03304 — augmentation-
-  *invariance* regularization beats naive augmentation and tolerates mis-
-  specified augmentations, the same principle.)
+- (Complementary: Botev, Bauer & De, "Regularising for invariance to data
+  augmentation improves supervised learning," arXiv:2203.03304 (2022) —
+  augmentation-*invariance* regularization beats naive augmentation and
+  tolerates mis-specified augmentations, the same principle.)
 
 **Mapped to our E5b results:** balanced / canonical-majority augmentation =
 "augmentation for conventional fine-tuning" → degradation (Zheng et al.
@@ -236,9 +236,8 @@ Format-robustness / consistency regularization (§6b):
 10. Liang, X., Wu, L., Li, J., Wang, Y., Meng, Q., Qin, T., Chen, W., Zhang, M.,
     & Liu, T.-Y. *R-Drop: Regularized Dropout for Neural Networks.* NeurIPS 2021.
     arXiv:2106.14448. https://doi.org/10.48550/arXiv.2106.14448
-11. Miao, N., Rainforth, T., Mathieu, E., et al. *Learning Instance-Specific
-    Augmentations by Capturing Local Invariances* / *Regularising for invariance
-    to data augmentation improves supervised learning.* arXiv:2203.03304.
+11. Botev, A., Bauer, M., & De, S. *Regularising for invariance to data
+    augmentation improves supervised learning.* arXiv:2203.03304 (2022).
     https://doi.org/10.48550/arXiv.2203.03304
 
 *Note: items 1, 3, 4 are peer-reviewable arXiv preprints suitable for direct

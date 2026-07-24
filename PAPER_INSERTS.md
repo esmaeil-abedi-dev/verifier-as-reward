@@ -241,3 +241,119 @@ failure modes are exactly the hardening devices: chain-structure violations
 (rules blind to wiring), decoy grants (rule 2 matches the wrong grant's
 glob; rule 3 the wrong cap), and inert timestamps (rule 1 fires on windows
 that lie after the action).
+
+---
+
+## INSERT 8 — notation robustness on real traces (E5b/E5c): finding, negative augmentation result, and the consistency-regularization fix
+
+Goes in the real-trace transfer section, after the vocabulary-transfer result.
+Fill the bracketed consistency-regularization numbers from the
+`colab_augment.ipynb` run (`results_augment.json`); the released and negative-
+augmentation numbers are final.
+
+> **Finding — notation sensitivity.** Mapping real tau2-bench trajectories into
+> our schema requires choosing a surface *notation* for resource identifiers.
+> The verifier-CE model transfers to the real tool-call *vocabulary* but is
+> sensitive to this notation: on 400 balanced real actions it scores 90.8%
+> (95% Wilson CI [87.5, 93.2]) in the trained `family:namespace/leaf` (slash)
+> notation and 75.0% [70.5, 79.0] when the identical actions are re-rendered in
+> an all-colon notation, with the drop entirely in over-authorization
+> (false-authorize 18.5% → 50.0%; false-refuse 0% in both). This is the known
+> spurious-format sensitivity of language models, which persists across scale
+> and instruction tuning (Sclar et al., 2024).
+>
+> **Naive augmentation makes it worse.** Retraining the cross-entropy objective
+> on a notation-augmented corpus — either an even four-way delimiter mix or a
+> 70% canonical-majority mix — does not close the gap. It converts real-trace
+> accuracy into a seed lottery (50–81% across three seeds; one run collapsed to
+> near-always-authorize, false-authorize ≈ 100%) while synthetic-test accuracy
+> stayed ≈ 96–100%: the model overfits the augmented synthetic distribution and
+> transfers worse. This is the documented failure mode of using augmentation for
+> *conventional* fine-tuning on *fine-grained* tasks — ours discriminates
+> `cust:0/…` from `cust:5/…` — whereas the *same* augmentation used for
+> **consistency regularization** helps by a large margin (Zheng et al., 2021).
+>
+> **The fix — consistency regularization.** We keep the cross-entropy loss on
+> the canonical rendering (preserving the sharp discrimination) and *add* a
+> symmetric Kullback–Leibler term tying the model's authorize/refuse
+> distribution on the canonical view to its distribution on the *same action
+> re-notated* in a randomly chosen delimiter scheme (an R-Drop–style consistency
+> objective; Liang et al., 2021; Botev et al., 2022):
+> L = CE(verdict ∣ canonical) + λ · KL_sym( p(·∣canonical) ‖ p(·∣re-notated) ).
+> Because re-notation provably preserves the verifier's verdict, both views
+> share the same label; the KL teaches *notation-invariance* — "return the same
+> verdict regardless of delimiter" — without exposing the cross-entropy loss to
+> off-notation data, which is what destabilized naive augmentation. With λ =
+> [__], the model reaches [__]% [CI] on the slash notation and [__]% [CI] on
+> colon, stable across three seeds (false-authorize [__]%).
+>
+> **Deterministic alternative.** Because the mapping from real logs into the
+> schema is under our control, notation robustness can also be obtained without
+> retraining, by canonicalizing inputs to the trained notation at deployment —
+> recovering the 90.8% slash-notation result on any input format. We report the
+> learned (consistency-regularized) and deterministic (canonicalization)
+> mitigations as complementary.
+
+### References for INSERT 8 (APA)
+
+- Botev, A., Bauer, M., & De, S. (2022). *Regularising for invariance to data
+  augmentation improves supervised learning.* arXiv:2203.03304.
+  https://doi.org/10.48550/arXiv.2203.03304
+- Liang, X., Wu, L., Li, J., Wang, Y., Meng, Q., Qin, T., Chen, W., Zhang, M., &
+  Liu, T.-Y. (2021). R-Drop: Regularized dropout for neural networks. In
+  *Advances in Neural Information Processing Systems 34 (NeurIPS 2021)*.
+  https://doi.org/10.48550/arXiv.2106.14448
+- Sclar, M., Choi, Y., Tsvetkov, Y., & Suhr, A. (2024). Quantifying language
+  models' sensitivity to spurious features in prompt design or: How I learned to
+  start worrying about prompt formatting. In *The Twelfth International
+  Conference on Learning Representations (ICLR 2024)*.
+  https://doi.org/10.48550/arXiv.2310.11324
+- Zheng, B., Dong, L., Huang, S., Wang, W., Chi, Z., Singhal, S., Che, W., Liu,
+  T., Song, X., & Wei, F. (2021). Consistency regularization for cross-lingual
+  fine-tuning. In *Proceedings of the 59th Annual Meeting of the Association for
+  Computational Linguistics and the 11th International Joint Conference on
+  Natural Language Processing (ACL-IJCNLP 2021)* (pp. 3403–3417).
+  https://doi.org/10.18653/v1/2021.acl-long.264
+
+### BibTeX for INSERT 8
+
+```bibtex
+@inproceedings{sclar2024quantifying,
+  title     = {Quantifying Language Models' Sensitivity to Spurious Features in Prompt Design or: How I learned to start worrying about prompt formatting},
+  author    = {Sclar, Melanie and Choi, Yejin and Tsvetkov, Yulia and Suhr, Alane},
+  booktitle = {The Twelfth International Conference on Learning Representations (ICLR)},
+  year      = {2024},
+  note      = {arXiv:2310.11324},
+  doi       = {10.48550/arXiv.2310.11324}
+}
+
+@inproceedings{zheng2021consistency,
+  title     = {Consistency Regularization for Cross-Lingual Fine-Tuning},
+  author    = {Zheng, Bo and Dong, Li and Huang, Shaohan and Wang, Wenhui and Chi, Zewen and Singhal, Saksham and Che, Wanxiang and Liu, Ting and Song, Xia and Wei, Furu},
+  booktitle = {Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (ACL-IJCNLP)},
+  pages     = {3403--3417},
+  year      = {2021},
+  doi       = {10.18653/v1/2021.acl-long.264}
+}
+
+@inproceedings{liang2021rdrop,
+  title     = {R-Drop: Regularized Dropout for Neural Networks},
+  author    = {Liang, Xiaobo and Wu, Lijun and Li, Juntao and Wang, Yue and Meng, Qi and Qin, Tao and Chen, Wei and Zhang, Min and Liu, Tie-Yan},
+  booktitle = {Advances in Neural Information Processing Systems 34 (NeurIPS)},
+  year      = {2021},
+  note      = {arXiv:2106.14448},
+  doi       = {10.48550/arXiv.2106.14448}
+}
+
+@article{botev2022regularising,
+  title   = {Regularising for invariance to data augmentation improves supervised learning},
+  author  = {Botev, Aleksander and Bauer, Matthias and De, Soham},
+  journal = {arXiv preprint arXiv:2203.03304},
+  year    = {2022},
+  doi     = {10.48550/arXiv.2203.03304}
+}
+```
+
+*Verify the Zheng et al. page range (3403–3417) against the ACL Anthology entry
+before final submission; all DOIs and author lists were confirmed against the
+published records.*
