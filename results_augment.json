@@ -1,0 +1,6049 @@
+{
+  "backends": {
+    "local:esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.975,
+        "accuracy_ci": [
+          0.9133539994467789,
+          0.9931172511018748
+        ],
+        "violation_recall": 0.9545454545454546,
+        "violation_recall_ci": [
+          0.8486472847469684,
+          0.9874451536330189
+        ],
+        "false_authorize_rate": 0.045454545454545456,
+        "false_authorize_rate_ci": [
+          0.012554846366981079,
+          0.15135271525303162
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 0.8,
+            "accuracy_ci": [
+              0.49015684672072335,
+              0.9433190520193067
+            ],
+            "violation_recall": 0.7777777777777778,
+            "violation_recall_ci": [
+              0.4525833436728054,
+              0.9367762376877727
+            ],
+            "false_authorize_rate": 0.2222222222222222,
+            "false_authorize_rate_ci": [
+              0.06322376231222723,
+              0.5474166563271946
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.045454545454545456,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.012554846366981079,
+          0.15135271525303162
+        ]
+      }
+    },
+    "local:esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.9075,
+        "accuracy_ci": [
+          0.8751007447962681,
+          0.9321464531149922
+        ],
+        "violation_recall": 0.815,
+        "violation_recall_ci": [
+          0.7554281794988185,
+          0.8626988367726394
+        ],
+        "false_authorize_rate": 0.185,
+        "false_authorize_rate_ci": [
+          0.13730116322736063,
+          0.2445718205011816
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.9075,
+            "accuracy_ci": [
+              0.8751007447962681,
+              0.9321464531149922
+            ],
+            "violation_recall": 0.815,
+            "violation_recall_ci": [
+              0.7554281794988185,
+              0.8626988367726394
+            ],
+            "false_authorize_rate": 0.185,
+            "false_authorize_rate_ci": [
+              0.13730116322736063,
+              0.2445718205011816
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.185,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.13730116322736063,
+          0.2445718205011816
+        ]
+      }
+    },
+    "local:esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.75,
+        "accuracy_ci": [
+          0.7053220081939279,
+          0.7899216715062317
+        ],
+        "violation_recall": 0.5,
+        "violation_recall_ci": [
+          0.43135962209034523,
+          0.5686403779096547
+        ],
+        "false_authorize_rate": 0.5,
+        "false_authorize_rate_ci": [
+          0.43135962209034523,
+          0.5686403779096547
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.75,
+            "accuracy_ci": [
+              0.7053220081939279,
+              0.7899216715062317
+            ],
+            "violation_recall": 0.5,
+            "violation_recall_ci": [
+              0.43135962209034523,
+              0.5686403779096547
+            ],
+            "false_authorize_rate": 0.5,
+            "false_authorize_rate_ci": [
+              0.43135962209034523,
+              0.5686403779096547
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.5,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.43135962209034523,
+          0.5686403779096547
+        ]
+      }
+    },
+    "local:esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.9806273062730627,
+        "accuracy_ci": [
+          0.9705653268404367,
+          0.9872947145479417
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.01937269372693727,
+        "false_refuse_rate_ci": [
+          0.012705285452058231,
+          0.029434673159563166
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.9806273062730627,
+            "accuracy_ci": [
+              0.9705653268404367,
+              0.9872947145479417
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.01937269372693727,
+            "false_refuse_rate_ci": [
+              0.012705285452058231,
+              0.029434673159563166
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:esmaeil-abedi-dev/verifier-ce-qwen2.5-0.5b::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.7624538745387454,
+        "accuracy_ci": [
+          0.7440848687357713,
+          0.7798944122578333
+        ],
+        "violation_recall": 0.544280442804428,
+        "violation_recall_ci": [
+          0.5145276293217848,
+          0.5737205126871253
+        ],
+        "false_authorize_rate": 0.45571955719557194,
+        "false_authorize_rate_ci": [
+          0.42627948731287457,
+          0.48547237067821514
+        ],
+        "false_refuse_rate": 0.01937269372693727,
+        "false_refuse_rate_ci": [
+          0.012705285452058231,
+          0.029434673159563166
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.7624538745387454,
+            "accuracy_ci": [
+              0.7440848687357713,
+              0.7798944122578333
+            ],
+            "violation_recall": 0.544280442804428,
+            "violation_recall_ci": [
+              0.5145276293217848,
+              0.5737205126871253
+            ],
+            "false_authorize_rate": 0.45571955719557194,
+            "false_authorize_rate_ci": [
+              0.42627948731287457,
+              0.48547237067821514
+            ],
+            "false_refuse_rate": 0.01937269372693727,
+            "false_refuse_rate_ci": [
+              0.012705285452058231,
+              0.029434673159563166
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.45571955719557194,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.42627948731287457,
+          0.48547237067821514
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed7::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.9875,
+        "accuracy_ci": [
+          0.9325356757603457,
+          0.9977900813816939
+        ],
+        "violation_recall": 0.9772727272727273,
+        "violation_recall_ci": [
+          0.8819202086846235,
+          0.9959768516143629
+        ],
+        "false_authorize_rate": 0.022727272727272728,
+        "false_authorize_rate_ci": [
+          0.004023148385637013,
+          0.11807979131537633
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7008472464490407,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2991527535509594
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 0.8,
+            "violation_recall_ci": [
+              0.3755282641185388,
+              0.9637768390302125
+            ],
+            "false_authorize_rate": 0.2,
+            "false_authorize_rate_ci": [
+              0.03622316096978745,
+              0.6244717358814613
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.022727272727272728,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.004023148385637013,
+          0.11807979131537633
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed7::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.9425,
+        "accuracy_ci": [
+          0.9151985747985072,
+          0.9613827382707756
+        ],
+        "violation_recall": 0.955,
+        "violation_recall_ci": [
+          0.9167024063390322,
+          0.9761477282752958
+        ],
+        "false_authorize_rate": 0.045,
+        "false_authorize_rate_ci": [
+          0.023852271724704166,
+          0.08329759366096785
+        ],
+        "false_refuse_rate": 0.07,
+        "false_refuse_rate_ci": [
+          0.04215178292291873,
+          0.11405578216683726
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.9425,
+            "accuracy_ci": [
+              0.9151985747985072,
+              0.9613827382707756
+            ],
+            "violation_recall": 0.955,
+            "violation_recall_ci": [
+              0.9167024063390322,
+              0.9761477282752958
+            ],
+            "false_authorize_rate": 0.045,
+            "false_authorize_rate_ci": [
+              0.023852271724704166,
+              0.08329759366096785
+            ],
+            "false_refuse_rate": 0.07,
+            "false_refuse_rate_ci": [
+              0.04215178292291873,
+              0.11405578216683726
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.045,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.023852271724704166,
+          0.08329759366096785
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed7::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.935,
+        "accuracy_ci": [
+          0.9064641783755448,
+          0.9552598243027332
+        ],
+        "violation_recall": 0.96,
+        "violation_recall_ci": [
+          0.9230670617058012,
+          0.9795946128493436
+        ],
+        "false_authorize_rate": 0.04,
+        "false_authorize_rate_ci": [
+          0.02040538715065641,
+          0.07693293829419882
+        ],
+        "false_refuse_rate": 0.09,
+        "false_refuse_rate_ci": [
+          0.05768697871453362,
+          0.13776674613848952
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.935,
+            "accuracy_ci": [
+              0.9064641783755448,
+              0.9552598243027332
+            ],
+            "violation_recall": 0.96,
+            "violation_recall_ci": [
+              0.9230670617058012,
+              0.9795946128493436
+            ],
+            "false_authorize_rate": 0.04,
+            "false_authorize_rate_ci": [
+              0.02040538715065641,
+              0.07693293829419882
+            ],
+            "false_refuse_rate": 0.09,
+            "false_refuse_rate_ci": [
+              0.05768697871453362,
+              0.13776674613848952
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.04,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.02040538715065641,
+          0.07693293829419882
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed7::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.683579335793358,
+        "accuracy_ci": [
+          0.6552858550256556,
+          0.7105762337196176
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.31642066420664205,
+        "false_refuse_rate_ci": [
+          0.28942376628038236,
+          0.3447141449743444
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.683579335793358,
+            "accuracy_ci": [
+              0.6552858550256556,
+              0.7105762337196176
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.31642066420664205,
+            "false_refuse_rate_ci": [
+              0.28942376628038236,
+              0.3447141449743444
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_xtune_seed7::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.834870848708487,
+        "accuracy_ci": [
+          0.8186515179458372,
+          0.8499055259932787
+        ],
+        "violation_recall": 0.9861623616236163,
+        "violation_recall_ci": [
+          0.9772944801949053,
+          0.9915965789445871
+        ],
+        "false_authorize_rate": 0.013837638376383764,
+        "false_authorize_rate_ci": [
+          0.008403421055412917,
+          0.022705519805094714
+        ],
+        "false_refuse_rate": 0.31642066420664205,
+        "false_refuse_rate_ci": [
+          0.28942376628038236,
+          0.3447141449743444
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.834870848708487,
+            "accuracy_ci": [
+              0.8186515179458372,
+              0.8499055259932787
+            ],
+            "violation_recall": 0.9861623616236163,
+            "violation_recall_ci": [
+              0.9772944801949053,
+              0.9915965789445871
+            ],
+            "false_authorize_rate": 0.013837638376383764,
+            "false_authorize_rate_ci": [
+              0.008403421055412917,
+              0.022705519805094714
+            ],
+            "false_refuse_rate": 0.31642066420664205,
+            "false_refuse_rate_ci": [
+              0.28942376628038236,
+              0.3447141449743444
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.013837638376383764,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.008403421055412917,
+          0.022705519805094714
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed8::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.9875,
+        "accuracy_ci": [
+          0.9325356757603457,
+          0.9977900813816939
+        ],
+        "violation_recall": 1.0,
+        "violation_recall_ci": [
+          0.9197016822179859,
+          0.9999999999999999
+        ],
+        "false_authorize_rate": 0.0,
+        "false_authorize_rate_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ],
+        "false_refuse_rate": 0.027777777777777776,
+        "false_refuse_rate_ci": [
+          0.004920280295569679,
+          0.141700337350308
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7008472464490407,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2991527535509594
+            ],
+            "false_refuse_rate": 1.0,
+            "false_refuse_rate_ci": [
+              0.20654329147389294,
+              1.0
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed8::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.91,
+        "accuracy_ci": [
+          0.877916547675384,
+          0.9342830870328781
+        ],
+        "violation_recall": 0.97,
+        "violation_recall_ci": [
+          0.9361048802675267,
+          0.9861798741692518
+        ],
+        "false_authorize_rate": 0.03,
+        "false_authorize_rate_ci": [
+          0.013820125830748327,
+          0.06389511973247333
+        ],
+        "false_refuse_rate": 0.15,
+        "false_refuse_rate_ci": [
+          0.107135265876273,
+          0.20605693826655166
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.91,
+            "accuracy_ci": [
+              0.877916547675384,
+              0.9342830870328781
+            ],
+            "violation_recall": 0.97,
+            "violation_recall_ci": [
+              0.9361048802675267,
+              0.9861798741692518
+            ],
+            "false_authorize_rate": 0.03,
+            "false_authorize_rate_ci": [
+              0.013820125830748327,
+              0.06389511973247333
+            ],
+            "false_refuse_rate": 0.15,
+            "false_refuse_rate_ci": [
+              0.107135265876273,
+              0.20605693826655166
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.03,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.013820125830748327,
+          0.06389511973247333
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed8::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.9075,
+        "accuracy_ci": [
+          0.8751007447962681,
+          0.9321464531149922
+        ],
+        "violation_recall": 0.965,
+        "violation_recall_ci": [
+          0.9295285391333187,
+          0.9829446753626429
+        ],
+        "false_authorize_rate": 0.035,
+        "false_authorize_rate_ci": [
+          0.017055324637357105,
+          0.07047146086668134
+        ],
+        "false_refuse_rate": 0.15,
+        "false_refuse_rate_ci": [
+          0.107135265876273,
+          0.20605693826655166
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.9075,
+            "accuracy_ci": [
+              0.8751007447962681,
+              0.9321464531149922
+            ],
+            "violation_recall": 0.965,
+            "violation_recall_ci": [
+              0.9295285391333187,
+              0.9829446753626429
+            ],
+            "false_authorize_rate": 0.035,
+            "false_authorize_rate_ci": [
+              0.017055324637357105,
+              0.07047146086668134
+            ],
+            "false_refuse_rate": 0.15,
+            "false_refuse_rate_ci": [
+              0.107135265876273,
+              0.20605693826655166
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.035,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.017055324637357105,
+          0.07047146086668134
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed8::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.4603321033210332,
+        "accuracy_ci": [
+          0.43085273428400944,
+          0.49009163849967513
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.5396678966789668,
+        "false_refuse_rate_ci": [
+          0.5099083615003248,
+          0.5691472657159904
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.4603321033210332,
+            "accuracy_ci": [
+              0.43085273428400944,
+              0.49009163849967513
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.5396678966789668,
+            "false_refuse_rate_ci": [
+              0.5099083615003248,
+              0.5691472657159904
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_xtune_seed8::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.7264760147601476,
+        "accuracy_ci": [
+          0.7073233382791068,
+          0.7448274999772374
+        ],
+        "violation_recall": 0.992619926199262,
+        "violation_recall_ci": [
+          0.9855047935016211,
+          0.9962557863475038
+        ],
+        "false_authorize_rate": 0.007380073800738007,
+        "false_authorize_rate_ci": [
+          0.0037442136524961245,
+          0.014495206498378778
+        ],
+        "false_refuse_rate": 0.5396678966789668,
+        "false_refuse_rate_ci": [
+          0.5099083615003248,
+          0.5691472657159904
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.7264760147601476,
+            "accuracy_ci": [
+              0.7073233382791068,
+              0.7448274999772374
+            ],
+            "violation_recall": 0.992619926199262,
+            "violation_recall_ci": [
+              0.9855047935016211,
+              0.9962557863475038
+            ],
+            "false_authorize_rate": 0.007380073800738007,
+            "false_authorize_rate_ci": [
+              0.0037442136524961245,
+              0.014495206498378778
+            ],
+            "false_refuse_rate": 0.5396678966789668,
+            "false_refuse_rate_ci": [
+              0.5099083615003248,
+              0.5691472657159904
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.007380073800738007,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.0037442136524961245,
+          0.014495206498378778
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed9::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.95,
+        "accuracy_ci": [
+          0.878375474489178,
+          0.9803867628727044
+        ],
+        "violation_recall": 1.0,
+        "violation_recall_ci": [
+          0.9197016822179859,
+          0.9999999999999999
+        ],
+        "false_authorize_rate": 0.0,
+        "false_authorize_rate_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ],
+        "false_refuse_rate": 0.1111111111111111,
+        "false_refuse_rate_ci": [
+          0.04406568908741834,
+          0.2531512901503632
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.2,
+            "false_refuse_rate_ci": [
+              0.03622316096978745,
+              0.6244717358814613
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7008472464490407,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2991527535509594
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 0.6,
+            "accuracy_ci": [
+              0.23071993220883708,
+              0.8823817688407467
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.4,
+            "false_refuse_rate_ci": [
+              0.1176182311592533,
+              0.769280067791163
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.2,
+            "false_refuse_rate_ci": [
+              0.03622316096978745,
+              0.6244717358814613
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed9::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.9775,
+        "accuracy_ci": [
+          0.9577968763972683,
+          0.9881185518300367
+        ],
+        "violation_recall": 0.955,
+        "violation_recall_ci": [
+          0.9167024063390322,
+          0.9761477282752958
+        ],
+        "false_authorize_rate": 0.045,
+        "false_authorize_rate_ci": [
+          0.023852271724704166,
+          0.08329759366096785
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.9775,
+            "accuracy_ci": [
+              0.9577968763972683,
+              0.9881185518300367
+            ],
+            "violation_recall": 0.955,
+            "violation_recall_ci": [
+              0.9167024063390322,
+              0.9761477282752958
+            ],
+            "false_authorize_rate": 0.045,
+            "false_authorize_rate_ci": [
+              0.023852271724704166,
+              0.08329759366096785
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.045,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.023852271724704166,
+          0.08329759366096785
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed9::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.9725,
+        "accuracy_ci": [
+          0.951434030711826,
+          0.984576523921476
+        ],
+        "violation_recall": 0.945,
+        "violation_recall_ci": [
+          0.9042120755340645,
+          0.9690149791986299
+        ],
+        "false_authorize_rate": 0.055,
+        "false_authorize_rate_ci": [
+          0.030985020801370097,
+          0.0957879244659355
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.9725,
+            "accuracy_ci": [
+              0.951434030711826,
+              0.984576523921476
+            ],
+            "violation_recall": 0.945,
+            "violation_recall_ci": [
+              0.9042120755340645,
+              0.9690149791986299
+            ],
+            "false_authorize_rate": 0.055,
+            "false_authorize_rate_ci": [
+              0.030985020801370097,
+              0.0957879244659355
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.055,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.030985020801370097,
+          0.0957879244659355
+        ]
+      }
+    },
+    "local:ckpt_xtune_seed9::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.933579335793358,
+        "accuracy_ci": [
+          0.9171712798091999,
+          0.9469251106947117
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.06642066420664207,
+        "false_refuse_rate_ci": [
+          0.05307488930528825,
+          0.08282872019080015
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.933579335793358,
+            "accuracy_ci": [
+              0.9171712798091999,
+              0.9469251106947117
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.06642066420664207,
+            "false_refuse_rate_ci": [
+              0.05307488930528825,
+              0.08282872019080015
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_xtune_seed9::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.9621771217712177,
+        "accuracy_ci": [
+          0.9532948863302749,
+          0.9694243396022241
+        ],
+        "violation_recall": 0.9907749077490775,
+        "violation_recall_ci": [
+          0.9831020364731428,
+          0.9949815374589445
+        ],
+        "false_authorize_rate": 0.00922509225092251,
+        "false_authorize_rate_ci": [
+          0.005018462541055608,
+          0.01689796352685722
+        ],
+        "false_refuse_rate": 0.06642066420664207,
+        "false_refuse_rate_ci": [
+          0.05307488930528825,
+          0.08282872019080015
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.9621771217712177,
+            "accuracy_ci": [
+              0.9532948863302749,
+              0.9694243396022241
+            ],
+            "violation_recall": 0.9907749077490775,
+            "violation_recall_ci": [
+              0.9831020364731428,
+              0.9949815374589445
+            ],
+            "false_authorize_rate": 0.00922509225092251,
+            "false_authorize_rate_ci": [
+              0.005018462541055608,
+              0.01689796352685722
+            ],
+            "false_refuse_rate": 0.06642066420664207,
+            "false_refuse_rate_ci": [
+              0.05307488930528825,
+              0.08282872019080015
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.00922509225092251,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.005018462541055608,
+          0.01689796352685722
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed7::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 1.0,
+        "accuracy_ci": [
+          0.954180263735425,
+          1.0
+        ],
+        "violation_recall": 1.0,
+        "violation_recall_ci": [
+          0.9197016822179859,
+          0.9999999999999999
+        ],
+        "false_authorize_rate": 0.0,
+        "false_authorize_rate_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7008472464490407,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2991527535509594
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed7::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.6,
+        "accuracy_ci": [
+          0.5512581652462732,
+          0.6468393066337906
+        ],
+        "violation_recall": 0.2,
+        "violation_recall_ci": [
+          0.15045120743928825,
+          0.26085639611170436
+        ],
+        "false_authorize_rate": 0.8,
+        "false_authorize_rate_ci": [
+          0.7391436038882958,
+          0.8495487925607118
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.6,
+            "accuracy_ci": [
+              0.5512581652462732,
+              0.6468393066337906
+            ],
+            "violation_recall": 0.2,
+            "violation_recall_ci": [
+              0.15045120743928825,
+              0.26085639611170436
+            ],
+            "false_authorize_rate": 0.8,
+            "false_authorize_rate_ci": [
+              0.7391436038882958,
+              0.8495487925607118
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.8,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.7391436038882958,
+          0.8495487925607118
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed7::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.59,
+        "accuracy_ci": [
+          0.5411663599855963,
+          0.6371213647064611
+        ],
+        "violation_recall": 0.18,
+        "violation_recall_ci": [
+          0.13294550662534108,
+          0.2391159371623843
+        ],
+        "false_authorize_rate": 0.82,
+        "false_authorize_rate_ci": [
+          0.7608840628376157,
+          0.8670544933746589
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.59,
+            "accuracy_ci": [
+              0.5411663599855963,
+              0.6371213647064611
+            ],
+            "violation_recall": 0.18,
+            "violation_recall_ci": [
+              0.13294550662534108,
+              0.2391159371623843
+            ],
+            "false_authorize_rate": 0.82,
+            "false_authorize_rate_ci": [
+              0.7608840628376157,
+              0.8670544933746589
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.82,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.7608840628376157,
+          0.8670544933746589
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed7::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 1.0,
+        "accuracy_ci": [
+          0.9964686035172767,
+          1.0
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.9964686035172767,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_consistency_seed7::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.5825645756457565,
+        "accuracy_ci": [
+          0.5616780226973493,
+          0.6031590446099534
+        ],
+        "violation_recall": 0.16512915129151293,
+        "violation_recall_ci": [
+          0.14421551153794301,
+          0.18840791451967417
+        ],
+        "false_authorize_rate": 0.834870848708487,
+        "false_authorize_rate_ci": [
+          0.8115920854803258,
+          0.8557844884620569
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.5825645756457565,
+            "accuracy_ci": [
+              0.5616780226973493,
+              0.6031590446099534
+            ],
+            "violation_recall": 0.16512915129151293,
+            "violation_recall_ci": [
+              0.14421551153794301,
+              0.18840791451967417
+            ],
+            "false_authorize_rate": 0.834870848708487,
+            "false_authorize_rate_ci": [
+              0.8115920854803258,
+              0.8557844884620569
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.834870848708487,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.8115920854803258,
+          0.8557844884620569
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed8::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.8125,
+        "accuracy_ci": [
+          0.7134147429619243,
+          0.8829479218727162
+        ],
+        "violation_recall": 0.75,
+        "violation_recall_ci": [
+          0.6055915019158504,
+          0.8542593391931426
+        ],
+        "false_authorize_rate": 0.25,
+        "false_authorize_rate_ci": [
+          0.14574066080685744,
+          0.39440849808414946
+        ],
+        "false_refuse_rate": 0.1111111111111111,
+        "false_refuse_rate_ci": [
+          0.04406568908741834,
+          0.2531512901503632
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 0.5,
+            "accuracy_ci": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "violation_recall": 0.2,
+            "violation_recall_ci": [
+              0.03622316096978745,
+              0.6244717358814613
+            ],
+            "false_authorize_rate": 0.8,
+            "false_authorize_rate_ci": [
+              0.3755282641185388,
+              0.9637768390302125
+            ],
+            "false_refuse_rate": 0.2,
+            "false_refuse_rate_ci": [
+              0.03622316096978745,
+              0.6244717358814613
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 0.5,
+            "accuracy_ci": [
+              0.23658959361548731,
+              0.7634104063845126
+            ],
+            "violation_recall": 0.4444444444444444,
+            "violation_recall_ci": [
+              0.188775429471914,
+              0.7333526542559703
+            ],
+            "false_authorize_rate": 0.5555555555555556,
+            "false_authorize_rate_ci": [
+              0.2666473457440297,
+              0.811224570528086
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 0.6,
+            "accuracy_ci": [
+              0.23071993220883708,
+              0.8823817688407467
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.4,
+            "false_refuse_rate_ci": [
+              0.1176182311592533,
+              0.769280067791163
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.2,
+            "false_refuse_rate_ci": [
+              0.03622316096978745,
+              0.6244717358814613
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 0.8,
+            "accuracy_ci": [
+              0.49015684672072335,
+              0.9433190520193067
+            ],
+            "violation_recall": 0.8,
+            "violation_recall_ci": [
+              0.49015684672072335,
+              0.9433190520193067
+            ],
+            "false_authorize_rate": 0.2,
+            "false_authorize_rate_ci": [
+              0.056680947980693314,
+              0.5098431532792765
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.25,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.14574066080685744,
+          0.39440849808414946
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed8::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.5,
+        "accuracy_ci": [
+          0.4512336165999552,
+          0.5487663834000448
+        ],
+        "violation_recall": 0.0,
+        "violation_recall_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "false_authorize_rate": 1.0,
+        "false_authorize_rate_ci": [
+          0.9811539940816791,
+          1.0
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.5,
+            "accuracy_ci": [
+              0.4512336165999552,
+              0.5487663834000448
+            ],
+            "violation_recall": 0.0,
+            "violation_recall_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "false_authorize_rate": 1.0,
+            "false_authorize_rate_ci": [
+              0.9811539940816791,
+              1.0
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 1.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.9811539940816791,
+          1.0
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed8::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.5,
+        "accuracy_ci": [
+          0.4512336165999552,
+          0.5487663834000448
+        ],
+        "violation_recall": 0.0,
+        "violation_recall_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "false_authorize_rate": 1.0,
+        "false_authorize_rate_ci": [
+          0.9811539940816791,
+          1.0
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.5,
+            "accuracy_ci": [
+              0.4512336165999552,
+              0.5487663834000448
+            ],
+            "violation_recall": 0.0,
+            "violation_recall_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "false_authorize_rate": 1.0,
+            "false_authorize_rate_ci": [
+              0.9811539940816791,
+              1.0
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 1.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.9811539940816791,
+          1.0
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed8::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 1.0,
+        "accuracy_ci": [
+          0.9964686035172767,
+          1.0
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.9964686035172767,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_consistency_seed8::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.5,
+        "accuracy_ci": [
+          0.47897132049867025,
+          0.5210286795013298
+        ],
+        "violation_recall": 0.0,
+        "violation_recall_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "false_authorize_rate": 1.0,
+        "false_authorize_rate_ci": [
+          0.9964686035172767,
+          1.0
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.5,
+            "accuracy_ci": [
+              0.47897132049867025,
+              0.5210286795013298
+            ],
+            "violation_recall": 0.0,
+            "violation_recall_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "false_authorize_rate": 1.0,
+            "false_authorize_rate_ci": [
+              0.9964686035172767,
+              1.0
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 1.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.9964686035172767,
+          1.0
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed9::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.9875,
+        "accuracy_ci": [
+          0.9325356757603457,
+          0.9977900813816939
+        ],
+        "violation_recall": 0.9772727272727273,
+        "violation_recall_ci": [
+          0.8819202086846235,
+          0.9959768516143629
+        ],
+        "false_authorize_rate": 0.022727272727272728,
+        "false_authorize_rate_ci": [
+          0.004023148385637013,
+          0.11807979131537633
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 0.8888888888888888,
+            "violation_recall_ci": [
+              0.5649937852319399,
+              0.9801096286728695
+            ],
+            "false_authorize_rate": 0.1111111111111111,
+            "false_authorize_rate_ci": [
+              0.019890371327130535,
+              0.4350062147680601
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.022727272727272728,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.004023148385637013,
+          0.11807979131537633
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed9::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.6325,
+        "accuracy_ci": [
+          0.5841997778817278,
+          0.6782793723593568
+        ],
+        "violation_recall": 0.265,
+        "violation_recall_ci": [
+          0.20868060011609973,
+          0.33017702266551113
+        ],
+        "false_authorize_rate": 0.735,
+        "false_authorize_rate_ci": [
+          0.6698229773344888,
+          0.7913193998839003
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.6325,
+            "accuracy_ci": [
+              0.5841997778817278,
+              0.6782793723593568
+            ],
+            "violation_recall": 0.265,
+            "violation_recall_ci": [
+              0.20868060011609973,
+              0.33017702266551113
+            ],
+            "false_authorize_rate": 0.735,
+            "false_authorize_rate_ci": [
+              0.6698229773344888,
+              0.7913193998839003
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.735,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.6698229773344888,
+          0.7913193998839003
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed9::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.635,
+        "accuracy_ci": [
+          0.5867430199020135,
+          0.6806885671360728
+        ],
+        "violation_recall": 0.27,
+        "violation_recall_ci": [
+          0.2132335473104056,
+          0.3354356154120221
+        ],
+        "false_authorize_rate": 0.73,
+        "false_authorize_rate_ci": [
+          0.664564384587978,
+          0.7867664526895944
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.635,
+            "accuracy_ci": [
+              0.5867430199020135,
+              0.6806885671360728
+            ],
+            "violation_recall": 0.27,
+            "violation_recall_ci": [
+              0.2132335473104056,
+              0.3354356154120221
+            ],
+            "false_authorize_rate": 0.73,
+            "false_authorize_rate_ci": [
+              0.664564384587978,
+              0.7867664526895944
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.73,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.664564384587978,
+          0.7867664526895944
+        ]
+      }
+    },
+    "local:ckpt_consistency_seed9::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 1.0,
+        "accuracy_ci": [
+          0.9964686035172767,
+          1.0
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.9964686035172767,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_consistency_seed9::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.7749077490774908,
+        "accuracy_ci": [
+          0.7568497925679365,
+          0.7919931801424123
+        ],
+        "violation_recall": 0.5498154981549815,
+        "violation_recall_ci": [
+          0.5200741167275751,
+          0.5792050430324487
+        ],
+        "false_authorize_rate": 0.45018450184501846,
+        "false_authorize_rate_ci": [
+          0.4207949569675512,
+          0.4799258832724248
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.7749077490774908,
+            "accuracy_ci": [
+              0.7568497925679365,
+              0.7919931801424123
+            ],
+            "violation_recall": 0.5498154981549815,
+            "violation_recall_ci": [
+              0.5200741167275751,
+              0.5792050430324487
+            ],
+            "false_authorize_rate": 0.45018450184501846,
+            "false_authorize_rate_ci": [
+              0.4207949569675512,
+              0.4799258832724248
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.45018450184501846,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.4207949569675512,
+          0.4799258832724248
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed7::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 1.0,
+        "accuracy_ci": [
+          0.954180263735425,
+          1.0
+        ],
+        "violation_recall": 1.0,
+        "violation_recall_ci": [
+          0.9197016822179859,
+          0.9999999999999999
+        ],
+        "false_authorize_rate": 0.0,
+        "false_authorize_rate_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7008472464490407,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2991527535509594
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed7::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.605,
+        "accuracy_ci": [
+          0.5563117510251911,
+          0.6516905944488758
+        ],
+        "violation_recall": 0.21,
+        "violation_recall_ci": [
+          0.15928329527863416,
+          0.271647388153992
+        ],
+        "false_authorize_rate": 0.79,
+        "false_authorize_rate_ci": [
+          0.7283526118460081,
+          0.8407167047213658
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.605,
+            "accuracy_ci": [
+              0.5563117510251911,
+              0.6516905944488758
+            ],
+            "violation_recall": 0.21,
+            "violation_recall_ci": [
+              0.15928329527863416,
+              0.271647388153992
+            ],
+            "false_authorize_rate": 0.79,
+            "false_authorize_rate_ci": [
+              0.7283526118460081,
+              0.8407167047213658
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.79,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.7283526118460081,
+          0.8407167047213658
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed7::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.6375,
+        "accuracy_ci": [
+          0.589287613174928,
+          0.6830964106601597
+        ],
+        "violation_recall": 0.275,
+        "violation_recall_ci": [
+          0.21779604313809775,
+          0.3406846595251467
+        ],
+        "false_authorize_rate": 0.725,
+        "false_authorize_rate_ci": [
+          0.6593153404748534,
+          0.7822039568619022
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.6375,
+            "accuracy_ci": [
+              0.589287613174928,
+              0.6830964106601597
+            ],
+            "violation_recall": 0.275,
+            "violation_recall_ci": [
+              0.21779604313809775,
+              0.3406846595251467
+            ],
+            "false_authorize_rate": 0.725,
+            "false_authorize_rate_ci": [
+              0.6593153404748534,
+              0.7822039568619022
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.725,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.6593153404748534,
+          0.7822039568619022
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed7::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.9981549815498155,
+        "accuracy_ci": [
+          0.9932977035126832,
+          0.9994938940875556
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.0018450184501845018,
+        "false_refuse_rate_ci": [
+          0.0005061059124443902,
+          0.006702296487316751
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.9981549815498155,
+            "accuracy_ci": [
+              0.9932977035126832,
+              0.9994938940875556
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0018450184501845018,
+            "false_refuse_rate_ci": [
+              0.0005061059124443902,
+              0.006702296487316751
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_balanced_seed7::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.5954797047970479,
+        "accuracy_ci": [
+          0.5746684190085007,
+          0.6159532174865363
+        ],
+        "violation_recall": 0.19280442804428044,
+        "violation_recall_ci": [
+          0.17042074234926202,
+          0.21735777246392396
+        ],
+        "false_authorize_rate": 0.8071955719557196,
+        "false_authorize_rate_ci": [
+          0.782642227536076,
+          0.8295792576507379
+        ],
+        "false_refuse_rate": 0.0018450184501845018,
+        "false_refuse_rate_ci": [
+          0.0005061059124443902,
+          0.006702296487316751
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.5954797047970479,
+            "accuracy_ci": [
+              0.5746684190085007,
+              0.6159532174865363
+            ],
+            "violation_recall": 0.19280442804428044,
+            "violation_recall_ci": [
+              0.17042074234926202,
+              0.21735777246392396
+            ],
+            "false_authorize_rate": 0.8071955719557196,
+            "false_authorize_rate_ci": [
+              0.782642227536076,
+              0.8295792576507379
+            ],
+            "false_refuse_rate": 0.0018450184501845018,
+            "false_refuse_rate_ci": [
+              0.0005061059124443902,
+              0.006702296487316751
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.8071955719557196,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.782642227536076,
+          0.8295792576507379
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed8::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.9875,
+        "accuracy_ci": [
+          0.9325356757603457,
+          0.9977900813816939
+        ],
+        "violation_recall": 0.9772727272727273,
+        "violation_recall_ci": [
+          0.8819202086846235,
+          0.9959768516143629
+        ],
+        "false_authorize_rate": 0.022727272727272728,
+        "false_authorize_rate_ci": [
+          0.004023148385637013,
+          0.11807979131537633
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 0.8888888888888888,
+            "violation_recall_ci": [
+              0.5649937852319399,
+              0.9801096286728695
+            ],
+            "false_authorize_rate": 0.1111111111111111,
+            "false_authorize_rate_ci": [
+              0.019890371327130535,
+              0.4350062147680601
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.022727272727272728,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.004023148385637013,
+          0.11807979131537633
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed8::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.81,
+        "accuracy_ci": [
+          0.7686754184345865,
+          0.8454267443936117
+        ],
+        "violation_recall": 0.62,
+        "violation_recall_ci": [
+          0.5510658951919951,
+          0.6844110633876079
+        ],
+        "false_authorize_rate": 0.38,
+        "false_authorize_rate_ci": [
+          0.3155889366123922,
+          0.4489341048080049
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.81,
+            "accuracy_ci": [
+              0.7686754184345865,
+              0.8454267443936117
+            ],
+            "violation_recall": 0.62,
+            "violation_recall_ci": [
+              0.5510658951919951,
+              0.6844110633876079
+            ],
+            "false_authorize_rate": 0.38,
+            "false_authorize_rate_ci": [
+              0.3155889366123922,
+              0.4489341048080049
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.38,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.3155889366123922,
+          0.4489341048080049
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed8::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.825,
+        "accuracy_ci": [
+          0.7847204162241496,
+          0.859096367386058
+        ],
+        "violation_recall": 0.65,
+        "violation_recall_ci": [
+          0.5816333576186576,
+          0.712712840605846
+        ],
+        "false_authorize_rate": 0.35,
+        "false_authorize_rate_ci": [
+          0.28728715939415395,
+          0.41836664238134236
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.825,
+            "accuracy_ci": [
+              0.7847204162241496,
+              0.859096367386058
+            ],
+            "violation_recall": 0.65,
+            "violation_recall_ci": [
+              0.5816333576186576,
+              0.712712840605846
+            ],
+            "false_authorize_rate": 0.35,
+            "false_authorize_rate_ci": [
+              0.28728715939415395,
+              0.41836664238134236
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.35,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.28728715939415395,
+          0.41836664238134236
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed8::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.9990774907749077,
+        "accuracy_ci": [
+          0.9947929604648664,
+          0.999837140093891
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.0009225092250922509,
+        "false_refuse_rate_ci": [
+          0.0001628599061087874,
+          0.005207039535133393
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.9990774907749077,
+            "accuracy_ci": [
+              0.9947929604648664,
+              0.999837140093891
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0009225092250922509,
+            "false_refuse_rate_ci": [
+              0.0001628599061087874,
+              0.005207039535133393
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_balanced_seed8::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.8519372693726938,
+        "accuracy_ci": [
+          0.8363646066425411,
+          0.8662649037232241
+        ],
+        "violation_recall": 0.7047970479704797,
+        "violation_recall_ci": [
+          0.6769581699439754,
+          0.7311894868472338
+        ],
+        "false_authorize_rate": 0.2952029520295203,
+        "false_authorize_rate_ci": [
+          0.2688105131527661,
+          0.32304183005602455
+        ],
+        "false_refuse_rate": 0.0009225092250922509,
+        "false_refuse_rate_ci": [
+          0.0001628599061087874,
+          0.005207039535133393
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.8519372693726938,
+            "accuracy_ci": [
+              0.8363646066425411,
+              0.8662649037232241
+            ],
+            "violation_recall": 0.7047970479704797,
+            "violation_recall_ci": [
+              0.6769581699439754,
+              0.7311894868472338
+            ],
+            "false_authorize_rate": 0.2952029520295203,
+            "false_authorize_rate_ci": [
+              0.2688105131527661,
+              0.32304183005602455
+            ],
+            "false_refuse_rate": 0.0009225092250922509,
+            "false_refuse_rate_ci": [
+              0.0001628599061087874,
+              0.005207039535133393
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.2952029520295203,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.2688105131527661,
+          0.32304183005602455
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed9::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.9,
+        "accuracy_ci": [
+          0.8148912101660255,
+          0.9484530008223144
+        ],
+        "violation_recall": 0.8181818181818182,
+        "violation_recall_ci": [
+          0.6803916324485767,
+          0.9048730744174144
+        ],
+        "false_authorize_rate": 0.18181818181818182,
+        "false_authorize_rate_ci": [
+          0.09512692558258554,
+          0.3196083675514233
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 0.8,
+            "accuracy_ci": [
+              0.49015684672072335,
+              0.9433190520193067
+            ],
+            "violation_recall": 0.6,
+            "violation_recall_ci": [
+              0.23071993220883708,
+              0.8823817688407467
+            ],
+            "false_authorize_rate": 0.4,
+            "false_authorize_rate_ci": [
+              0.1176182311592533,
+              0.769280067791163
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 0.8,
+            "violation_recall_ci": [
+              0.3755282641185388,
+              0.9637768390302125
+            ],
+            "false_authorize_rate": 0.2,
+            "false_authorize_rate_ci": [
+              0.03622316096978745,
+              0.6244717358814613
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 0.6,
+            "accuracy_ci": [
+              0.3126695474501864,
+              0.8318224187964902
+            ],
+            "violation_recall": 0.5555555555555556,
+            "violation_recall_ci": [
+              0.2666473457440297,
+              0.811224570528086
+            ],
+            "false_authorize_rate": 0.4444444444444444,
+            "false_authorize_rate_ci": [
+              0.188775429471914,
+              0.7333526542559703
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 0.8,
+            "violation_recall_ci": [
+              0.3755282641185388,
+              0.9637768390302125
+            ],
+            "false_authorize_rate": 0.2,
+            "false_authorize_rate_ci": [
+              0.03622316096978745,
+              0.6244717358814613
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.18181818181818182,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.09512692558258554,
+          0.3196083675514233
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed9::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.6575,
+        "accuracy_ci": [
+          0.6096937475435954,
+          0.7023097706675051
+        ],
+        "violation_recall": 0.315,
+        "violation_recall_ci": [
+          0.25462218077944276,
+          0.38235084141033604
+        ],
+        "false_authorize_rate": 0.685,
+        "false_authorize_rate_ci": [
+          0.617649158589664,
+          0.7453778192205573
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.6575,
+            "accuracy_ci": [
+              0.6096937475435954,
+              0.7023097706675051
+            ],
+            "violation_recall": 0.315,
+            "violation_recall_ci": [
+              0.25462218077944276,
+              0.38235084141033604
+            ],
+            "false_authorize_rate": 0.685,
+            "false_authorize_rate_ci": [
+              0.617649158589664,
+              0.7453778192205573
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.685,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.617649158589664,
+          0.7453778192205573
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed9::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.6325,
+        "accuracy_ci": [
+          0.5841997778817278,
+          0.6782793723593568
+        ],
+        "violation_recall": 0.265,
+        "violation_recall_ci": [
+          0.20868060011609973,
+          0.33017702266551113
+        ],
+        "false_authorize_rate": 0.735,
+        "false_authorize_rate_ci": [
+          0.6698229773344888,
+          0.7913193998839003
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.6325,
+            "accuracy_ci": [
+              0.5841997778817278,
+              0.6782793723593568
+            ],
+            "violation_recall": 0.265,
+            "violation_recall_ci": [
+              0.20868060011609973,
+              0.33017702266551113
+            ],
+            "false_authorize_rate": 0.735,
+            "false_authorize_rate_ci": [
+              0.6698229773344888,
+              0.7913193998839003
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.735,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.6698229773344888,
+          0.7913193998839003
+        ]
+      }
+    },
+    "local:ckpt_balanced_seed9::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.9953874538745388,
+        "accuracy_ci": [
+          0.989247824516977,
+          0.9980282642077049
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.004612546125461255,
+        "false_refuse_rate_ci": [
+          0.0019717357922951068,
+          0.010752175483022916
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.9953874538745388,
+            "accuracy_ci": [
+              0.989247824516977,
+              0.9980282642077049
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.004612546125461255,
+            "false_refuse_rate_ci": [
+              0.0019717357922951068,
+              0.010752175483022916
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_balanced_seed9::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.6688191881918819,
+        "accuracy_ci": [
+          0.6487245355821454,
+          0.6883166188003842
+        ],
+        "violation_recall": 0.3422509225092251,
+        "violation_recall_ci": [
+          0.3146072619790462,
+          0.3710087321142115
+        ],
+        "false_authorize_rate": 0.6577490774907749,
+        "false_authorize_rate_ci": [
+          0.6289912678857885,
+          0.6853927380209539
+        ],
+        "false_refuse_rate": 0.004612546125461255,
+        "false_refuse_rate_ci": [
+          0.0019717357922951068,
+          0.010752175483022916
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.6688191881918819,
+            "accuracy_ci": [
+              0.6487245355821454,
+              0.6883166188003842
+            ],
+            "violation_recall": 0.3422509225092251,
+            "violation_recall_ci": [
+              0.3146072619790462,
+              0.3710087321142115
+            ],
+            "false_authorize_rate": 0.6577490774907749,
+            "false_authorize_rate_ci": [
+              0.6289912678857885,
+              0.6853927380209539
+            ],
+            "false_refuse_rate": 0.004612546125461255,
+            "false_refuse_rate_ci": [
+              0.0019717357922951068,
+              0.010752175483022916
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.6577490774907749,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.6289912678857885,
+          0.6853927380209539
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed7::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 1.0,
+        "accuracy_ci": [
+          0.954180263735425,
+          1.0
+        ],
+        "violation_recall": 1.0,
+        "violation_recall_ci": [
+          0.9197016822179859,
+          0.9999999999999999
+        ],
+        "false_authorize_rate": 0.0,
+        "false_authorize_rate_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7008472464490407,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2991527535509594
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          6.938893903907228e-18,
+          0.08029831778201396
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed7::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.7825,
+        "accuracy_ci": [
+          0.7394863393745473,
+          0.820139018686633
+        ],
+        "violation_recall": 0.565,
+        "violation_recall_ci": [
+          0.4957060908195922,
+          0.631843928411026
+        ],
+        "false_authorize_rate": 0.435,
+        "false_authorize_rate_ci": [
+          0.368156071588974,
+          0.5042939091804078
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.7825,
+            "accuracy_ci": [
+              0.7394863393745473,
+              0.820139018686633
+            ],
+            "violation_recall": 0.565,
+            "violation_recall_ci": [
+              0.4957060908195922,
+              0.631843928411026
+            ],
+            "false_authorize_rate": 0.435,
+            "false_authorize_rate_ci": [
+              0.368156071588974,
+              0.5042939091804078
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.435,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.368156071588974,
+          0.5042939091804078
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed7::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.765,
+        "accuracy_ci": [
+          0.7210486102094291,
+          0.8039096902727403
+        ],
+        "violation_recall": 0.53,
+        "violation_recall_ci": [
+          0.46091557335361155,
+          0.5979536662912893
+        ],
+        "false_authorize_rate": 0.47,
+        "false_authorize_rate_ci": [
+          0.4020463337087108,
+          0.5390844266463886
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.765,
+            "accuracy_ci": [
+              0.7210486102094291,
+              0.8039096902727403
+            ],
+            "violation_recall": 0.53,
+            "violation_recall_ci": [
+              0.46091557335361155,
+              0.5979536662912893
+            ],
+            "false_authorize_rate": 0.47,
+            "false_authorize_rate_ci": [
+              0.4020463337087108,
+              0.5390844266463886
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.47,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.4020463337087108,
+          0.5390844266463886
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed7::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.9695571955719557,
+        "accuracy_ci": [
+          0.9575557711976195,
+          0.9782422346885316
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.03044280442804428,
+        "false_refuse_rate_ci": [
+          0.021757765311468405,
+          0.04244422880238051
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.9695571955719557,
+            "accuracy_ci": [
+              0.9575557711976195,
+              0.9782422346885316
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.03044280442804428,
+            "false_refuse_rate_ci": [
+              0.021757765311468405,
+              0.04244422880238051
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_cmaj_seed7::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.7343173431734318,
+        "accuracy_ci": [
+          0.715321686102142,
+          0.7524840691610412
+        ],
+        "violation_recall": 0.49907749077490776,
+        "violation_recall_ci": [
+          0.4693680218536517,
+          0.5287934751878293
+        ],
+        "false_authorize_rate": 0.5009225092250923,
+        "false_authorize_rate_ci": [
+          0.47120652481217074,
+          0.5306319781463483
+        ],
+        "false_refuse_rate": 0.03044280442804428,
+        "false_refuse_rate_ci": [
+          0.021757765311468405,
+          0.04244422880238051
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.7343173431734318,
+            "accuracy_ci": [
+              0.715321686102142,
+              0.7524840691610412
+            ],
+            "violation_recall": 0.49907749077490776,
+            "violation_recall_ci": [
+              0.4693680218536517,
+              0.5287934751878293
+            ],
+            "false_authorize_rate": 0.5009225092250923,
+            "false_authorize_rate_ci": [
+              0.47120652481217074,
+              0.5306319781463483
+            ],
+            "false_refuse_rate": 0.03044280442804428,
+            "false_refuse_rate_ci": [
+              0.021757765311468405,
+              0.04244422880238051
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.5009225092250923,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.47120652481217074,
+          0.5306319781463483
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed8::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.9875,
+        "accuracy_ci": [
+          0.9325356757603457,
+          0.9977900813816939
+        ],
+        "violation_recall": 0.9772727272727273,
+        "violation_recall_ci": [
+          0.8819202086846235,
+          0.9959768516143629
+        ],
+        "false_authorize_rate": 0.022727272727272728,
+        "false_authorize_rate_ci": [
+          0.004023148385637013,
+          0.11807979131537633
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 0.9,
+            "accuracy_ci": [
+              0.5958436145024278,
+              0.9821242504842788
+            ],
+            "violation_recall": 0.8888888888888888,
+            "violation_recall_ci": [
+              0.5649937852319399,
+              0.9801096286728695
+            ],
+            "false_authorize_rate": 0.1111111111111111,
+            "false_authorize_rate_ci": [
+              0.019890371327130535,
+              0.4350062147680601
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.022727272727272728,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.004023148385637013,
+          0.11807979131537633
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed8::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.725,
+        "accuracy_ci": [
+          0.6792573188568649,
+          0.7664619928732788
+        ],
+        "violation_recall": 0.45,
+        "violation_recall_ci": [
+          0.38263948633754313,
+          0.519245114254289
+        ],
+        "false_authorize_rate": 0.55,
+        "false_authorize_rate_ci": [
+          0.48075488574571107,
+          0.6173605136624569
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.725,
+            "accuracy_ci": [
+              0.6792573188568649,
+              0.7664619928732788
+            ],
+            "violation_recall": 0.45,
+            "violation_recall_ci": [
+              0.38263948633754313,
+              0.519245114254289
+            ],
+            "false_authorize_rate": 0.55,
+            "false_authorize_rate_ci": [
+              0.48075488574571107,
+              0.6173605136624569
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.55,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.48075488574571107,
+          0.6173605136624569
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed8::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.7025,
+        "accuracy_ci": [
+          0.6559441809772917,
+          0.7452031995798376
+        ],
+        "violation_recall": 0.405,
+        "violation_recall_ci": [
+          0.3393765611244294,
+          0.4742041800000517
+        ],
+        "false_authorize_rate": 0.595,
+        "false_authorize_rate_ci": [
+          0.5257958199999483,
+          0.6606234388755706
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.7025,
+            "accuracy_ci": [
+              0.6559441809772917,
+              0.7452031995798376
+            ],
+            "violation_recall": 0.405,
+            "violation_recall_ci": [
+              0.3393765611244294,
+              0.4742041800000517
+            ],
+            "false_authorize_rate": 0.595,
+            "false_authorize_rate_ci": [
+              0.5257958199999483,
+              0.6606234388755706
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.595,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.5257958199999483,
+          0.6606234388755706
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed8::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 0.992619926199262,
+        "accuracy_ci": [
+          0.9855047935016211,
+          0.9962557863475038
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.007380073800738007,
+        "false_refuse_rate_ci": [
+          0.0037442136524961245,
+          0.014495206498378778
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 0.992619926199262,
+            "accuracy_ci": [
+              0.9855047935016211,
+              0.9962557863475038
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.007380073800738007,
+            "false_refuse_rate_ci": [
+              0.0037442136524961245,
+              0.014495206498378778
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_cmaj_seed8::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.6591328413284133,
+        "accuracy_ci": [
+          0.6389141557237301,
+          0.6787885717679987
+        ],
+        "violation_recall": 0.32564575645756455,
+        "violation_recall_ci": [
+          0.2984069217391298,
+          0.35411601910078644
+        ],
+        "false_authorize_rate": 0.6743542435424354,
+        "false_authorize_rate_ci": [
+          0.6458839808992134,
+          0.7015930782608701
+        ],
+        "false_refuse_rate": 0.007380073800738007,
+        "false_refuse_rate_ci": [
+          0.0037442136524961245,
+          0.014495206498378778
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.6591328413284133,
+            "accuracy_ci": [
+              0.6389141557237301,
+              0.6787885717679987
+            ],
+            "violation_recall": 0.32564575645756455,
+            "violation_recall_ci": [
+              0.2984069217391298,
+              0.35411601910078644
+            ],
+            "false_authorize_rate": 0.6743542435424354,
+            "false_authorize_rate_ci": [
+              0.6458839808992134,
+              0.7015930782608701
+            ],
+            "false_refuse_rate": 0.007380073800738007,
+            "false_refuse_rate_ci": [
+              0.0037442136524961245,
+              0.014495206498378778
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.6743542435424354,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.6458839808992134,
+          0.7015930782608701
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed9::benchmark_test.jsonl": {
+      "metrics": {
+        "n_actions": 80,
+        "n_unauthorized": 44,
+        "accuracy": 0.975,
+        "accuracy_ci": [
+          0.9133539994467789,
+          0.9931172511018748
+        ],
+        "violation_recall": 0.9545454545454546,
+        "violation_recall_ci": [
+          0.8486472847469684,
+          0.9874451536330189
+        ],
+        "false_authorize_rate": 0.045454545454545456,
+        "false_authorize_rate_ci": [
+          0.012554846366981079,
+          0.15135271525303162
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.09642183044857634
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "budget_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "chain_structure": {
+            "n_actions": 10,
+            "n_unauthorized": 9,
+            "accuracy": 0.8,
+            "accuracy_ci": [
+              0.49015684672072335,
+              0.9433190520193067
+            ],
+            "violation_recall": 0.7777777777777778,
+            "violation_recall_ci": [
+              0.4525833436728054,
+              0.9367762376877727
+            ],
+            "false_authorize_rate": 0.2222222222222222,
+            "false_authorize_rate_ci": [
+              0.06322376231222723,
+              0.5474166563271946
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.7934567085261071
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "expiry": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "multi_hop": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "resource_violation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "revocation": {
+            "n_actions": 10,
+            "n_unauthorized": 5,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          },
+          "scope_escalation": {
+            "n_actions": 10,
+            "n_unauthorized": 10,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "violation_recall": 1.0,
+            "violation_recall_ci": [
+              0.7224598312333834,
+              1.0
+            ],
+            "false_authorize_rate": 0.0,
+            "false_authorize_rate_ci": [
+              0.0,
+              0.2775401687666166
+            ],
+            "false_refuse_rate": null,
+            "false_refuse_rate_ci": null,
+            "parse_failure_rate": 0.0
+          },
+          "single_delegation": {
+            "n_actions": 5,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.5655085052479191,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.43449149475208104
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.045454545454545456,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.012554846366981079,
+          0.15135271525303162
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed9::real_trace_all.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.5025,
+        "accuracy_ci": [
+          0.4537104387832728,
+          0.5512419980137288
+        ],
+        "violation_recall": 0.005,
+        "violation_recall_ci": [
+          0.0008831459893662054,
+          0.02777439986977148
+        ],
+        "false_authorize_rate": 0.995,
+        "false_authorize_rate_ci": [
+          0.9722256001302286,
+          0.999116854010634
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.5025,
+            "accuracy_ci": [
+              0.4537104387832728,
+              0.5512419980137288
+            ],
+            "violation_recall": 0.005,
+            "violation_recall_ci": [
+              0.0008831459893662054,
+              0.02777439986977148
+            ],
+            "false_authorize_rate": 0.995,
+            "false_authorize_rate_ci": [
+              0.9722256001302286,
+              0.999116854010634
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.995,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.9722256001302286,
+          0.999116854010634
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed9::real_trace_all_colon.jsonl": {
+      "metrics": {
+        "n_actions": 400,
+        "n_unauthorized": 200,
+        "accuracy": 0.5,
+        "accuracy_ci": [
+          0.4512336165999552,
+          0.5487663834000448
+        ],
+        "violation_recall": 0.0,
+        "violation_recall_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "false_authorize_rate": 1.0,
+        "false_authorize_rate_ci": [
+          0.9811539940816791,
+          1.0
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.018846005918320894
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 400,
+            "n_unauthorized": 200,
+            "accuracy": 0.5,
+            "accuracy_ci": [
+              0.4512336165999552,
+              0.5487663834000448
+            ],
+            "violation_recall": 0.0,
+            "violation_recall_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "false_authorize_rate": 1.0,
+            "false_authorize_rate_ci": [
+              0.9811539940816791,
+              1.0
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.018846005918320894
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 1.0,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.9811539940816791,
+          1.0
+        ]
+      }
+    },
+    "local:ckpt_cmaj_seed9::real_toucan_mixed.jsonl": {
+      "metrics": {
+        "n_actions": 1084,
+        "n_unauthorized": 0,
+        "accuracy": 1.0,
+        "accuracy_ci": [
+          0.9964686035172767,
+          1.0
+        ],
+        "violation_recall": null,
+        "violation_recall_ci": null,
+        "false_authorize_rate": null,
+        "false_authorize_rate_ci": null,
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "single_delegation": {
+            "n_actions": 1084,
+            "n_unauthorized": 0,
+            "accuracy": 1.0,
+            "accuracy_ci": [
+              0.9964686035172767,
+              1.0
+            ],
+            "violation_recall": null,
+            "violation_recall_ci": null,
+            "false_authorize_rate": null,
+            "false_authorize_rate_ci": null,
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": null,
+        "headline_false_authorize_rate_on_violation_classes_ci": null
+      }
+    },
+    "local:ckpt_cmaj_seed9::real_toucan_balanced.jsonl": {
+      "metrics": {
+        "n_actions": 2168,
+        "n_unauthorized": 1084,
+        "accuracy": 0.5027675276752768,
+        "accuracy_ci": [
+          0.4817342744704376,
+          0.5237909903555056
+        ],
+        "violation_recall": 0.005535055350553505,
+        "violation_recall_ci": [
+          0.0025391263324117553,
+          0.012023287901425228
+        ],
+        "false_authorize_rate": 0.9944649446494465,
+        "false_authorize_rate_ci": [
+          0.9879767120985746,
+          0.9974608736675882
+        ],
+        "false_refuse_rate": 0.0,
+        "false_refuse_rate_ci": [
+          0.0,
+          0.0035313964827232195
+        ],
+        "parse_failure_rate": 0.0,
+        "per_class": {
+          "attack_confused_deputy": {
+            "n_actions": 2168,
+            "n_unauthorized": 1084,
+            "accuracy": 0.5027675276752768,
+            "accuracy_ci": [
+              0.4817342744704376,
+              0.5237909903555056
+            ],
+            "violation_recall": 0.005535055350553505,
+            "violation_recall_ci": [
+              0.0025391263324117553,
+              0.012023287901425228
+            ],
+            "false_authorize_rate": 0.9944649446494465,
+            "false_authorize_rate_ci": [
+              0.9879767120985746,
+              0.9974608736675882
+            ],
+            "false_refuse_rate": 0.0,
+            "false_refuse_rate_ci": [
+              0.0,
+              0.0035313964827232195
+            ],
+            "parse_failure_rate": 0.0
+          }
+        },
+        "headline_false_authorize_rate_on_violation_classes": 0.9944649446494465,
+        "headline_false_authorize_rate_on_violation_classes_ci": [
+          0.9879767120985746,
+          0.9974608736675882
+        ]
+      }
+    }
+  }
+}
