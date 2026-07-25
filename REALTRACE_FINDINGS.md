@@ -228,16 +228,11 @@ released model's stable 90.8%. Augmentation converges on the *synthetic*
 distribution but makes real-vocabulary transfer a **seed lottery**, biased toward
 over-authorization (false-authorize climbs from 18.5% to 38–100%).
 
-**Conclusion (the honest, decisive result).** For this 0.5B verifier-CE setup,
-resource-notation robustness should be handled by **normalizing real inputs to
-the trained notation at deployment**, *not* by notation data-augmentation.
-Augmentation trades a modest, well-characterized notation gap (90.8% slash →
-75.0% colon) for large seed instability, over-authorization, and occasional
-collapse — a strictly worse, less reliable model. The released single-notation
-model at **90.8% (stable)** on real tau2, plus input normalization for off-
-notation deployments, is the recommended configuration. This is a useful
-negative result: it delimits *how* to buy robustness here (preprocess, don't
-augment).
+**Conclusion of the augmentation arm (superseded as the final word by E5c v2
+below).** Naive augmentation trades a modest, well-characterized notation gap
+(90.8% slash → 75.0% colon) for seed instability, over-authorization, and
+occasional collapse. It remains the honest negative result that motivates the
+E5c recipe: *how* the notation signal enters training is decisive.
 
 **Reproduce:** `colab_augment.ipynb` (the negative variants are commented in
 Step 2; uncomment to re-run). `results_augment.json` +
@@ -268,30 +263,78 @@ training action:
   views share the verifier's verdict; the KL teaches "give the same answer
   regardless of delimiter," not a looser resource-matching.
 
-Why this should reach the target where augmentation didn't: CE never sees the
-off-notation data (no dilution → no over-authorization, no seed collapse), and
-the KL pulls the colon/pipe distribution onto the canonical (correct) one.
-Predicted: slash stays ~90% and colon rises toward it (~85%+), stable across
-seeds. Result _pending_ the `colab_augment.ipynb` run (default variant now
-`consistency`, 3 seeds; `training_log_consistency_seed*.jsonl`).
+**v1 result — FAILED (3 seeds: 57.8%/57.5% mean on tau2 slash/colon,
+false-authorize ≈85%, one seed collapsed).** The partial adaptation above made
+the notations *equal* but at a bad level. A close re-read of the full papers
+showed it deviated from the published recipe on three counts, each load-bearing:
+1. **No stop-gradient.** xTune's KL_S(P,Q) = KL(sg(P)‖Q) + KL(sg(Q)‖P) — each
+   direction pushes only the student side. Our fully-differentiable symKL let
+   the re-notated view drag the canonical anchor's distribution around.
+2. **No frozen teacher (R2).** xTune stage 2 distills from a frozen stage-1
+   model — the collapse-preventer. We had no anchor at all.
+3. **No task loss on the augmented view.** xTune stage 2 trains L_task on the
+   augmented data (and R-Drop applies NLL to *both* passes); we trained CE on
+   canonical only. Also λ: xTune uses 5.0 for classification; we used 1.0.
 
-**Deterministic complement (always available).** Because we choose the notation
-when mapping real logs into the schema, the deployment mitigation is **input
-canonicalization** — emit the trained slash notation, i.e. the stable 90.8%
-column — with zero retraining. Consistency-reg is the model-side contribution
-that removes the need to normalize; canonicalization is the guaranteed fallback.
+---
+
+## E5c v2 — the faithful xTune recipe: SUCCESS
+
+**Method.** Fine-tune from the released CE model, which doubles as the frozen
+stage-1 teacher θ\*. Per action: CE on **both** views (canonical + re-notated;
+labels identical, re-notation provably verdict-preserving) + λ₁·stop-grad symKL
+between views (R1) + λ₂·KL of both views to θ\* (R2). λ₁=λ₂=5.0, lr 1e-5,
+500 steps, 3 seeds. **Checkpoint selection** on `transfer_val.jsonl` — a
+synthetic-vocabulary set mirroring the real mapping's structure (single-hop,
+specific-tool grants, foreign-namespace redirects, mixed notations; seed 303) —
+because training oscillates between notation-robust and brittle states
+(select scores swing 0.475↔0.975 within a run); `--select-file` keeps the
+best-selection checkpoint, never the last step.
+
+**Result (all held-out real tests, 95% Wilson CIs in results_augment.json):**
+
+| model | committed | tau2-slash | tau2-colon | toucan-BAL (fauth) | toucan-auth (fref) |
+|---|---|---|---|---|---|
+| released | 97.5 | 90.8 | 75.0 | 76.2 (45.6) | 98.1 (1.9) |
+| xtune s7 | 98.8 | 94.2 | 93.5 | 83.5 (1.4) | 68.4 (31.6) |
+| xtune s8 | 98.8 | 91.0 | 90.8 | 72.6 (0.7) | 46.0 (54.0) |
+| **xtune s9** | 95.0 | **97.8** | **97.2** | **96.2** (0.9) | **93.4** (6.6) |
+| xtune mean | 97.5 | **94.3** | **93.8** | 84.1 | 69.3 |
+
+- **The notation gap is closed upward:** colon 75.0 → 93.8 mean (every seed
+  ≥90.8); slash *improved* too (90.8 → 94.3). False-authorize on tau2 fell
+  from 18.5–50% to 3.0–5.5%.
+- **The residual error direction flipped from fail-open to fail-closed:** the
+  brittle models over-authorized; the fixed models slightly over-refuse
+  (0–15% tau2; more on Toucan for seeds 7/8) — the safer direction for
+  authorization.
+- **The selection score rank-orders cross-source transfer:** best select
+  0.867/0.942/0.975 (s8/s7/s9) → Toucan-auth 46.0/68.4/93.4. Picking the
+  highest-select seed **a priori** picks seed 9 — strong on every test.
+- **Selection is not optional:** the same runs' last-step checkpoints select
+  at 0.500–0.800; naive last-step training would have reported failure.
+
+**Deterministic complement (always available).** Input canonicalization —
+re-notate real inputs to the trained notation at mapping time — recovers the
+released model's 90.8% with zero retraining. The learned fix and the
+deterministic fix are complementary; the paper reports both.
 
 **Grounding:** Sclar et al. (ICLR 2024, arXiv:2310.11324); Zheng et al. (ACL
 2021, doi:10.18653/v1/2021.acl-long.264); Liang et al. (R-Drop, NeurIPS 2021,
-arXiv:2106.14448). See `RELATED_WORK_AND_DIRECTIONS.md` §6b.
+arXiv:2106.14448). See `RELATED_WORK_AND_DIRECTIONS.md` §6b and
+`PAPER_INSERTS.md` INSERT 8 (paste-ready text + BibTeX).
 
 ## Deliverables
 - `map_tau_to_chain.py` (+ `test_map_tau_to_chain.py`, offline), `colab_realtrace.ipynb`
 - `map_toucan_to_chain.py` (+ `test_map_toucan.py`, offline, 7 tests) — second real source
 - `augment_representation.py` (+ `test_augment_representation.py`), `colab_augment.ipynb`
-- `real_trace_{telecom,airline,retail,all}.jsonl`, `real_toucan_{all,mixed}.jsonl`
-  (gitignored; regenerate from seed 5 / seed 9)
-- `results_realtrace.json`, `results_augment.json` (per-test + Wilson CIs)
+- `make_transfer_val.py` (+ `test_make_transfer_val.py`) — selection set;
+  `--select-file` best-checkpoint selection in `train_verifier_reward.py`
+- `real_trace_{telecom,airline,retail,all}.jsonl`,
+  `real_toucan_{mixed,balanced}.jsonl`, `transfer_val.jsonl`
+  (gitignored; regenerate from seeds 5 / 9 / 303)
+- `results_realtrace.json`, `results_augment.json` (per-test + Wilson CIs);
+  `training_log_{consistency,xtune}_seed*.jsonl`
 - AgentDojo (native prompt-injection threat model) is cited as complementary
   future work, not run — a different formalism that would force verdict-vs-label
   reconciliation.

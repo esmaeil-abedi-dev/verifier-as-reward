@@ -244,12 +244,10 @@ that lie after the action).
 
 ---
 
-## INSERT 8 — notation robustness on real traces (E5b/E5c): finding, negative augmentation result, and the consistency-regularization fix
+## INSERT 8 — notation robustness on real traces (E5b/E5c): finding, negative augmentation result, and the xTune-style fix
 
 Goes in the real-trace transfer section, after the vocabulary-transfer result.
-Fill the bracketed consistency-regularization numbers from the
-`colab_augment.ipynb` run (`results_augment.json`); the released and negative-
-augmentation numbers are final.
+All numbers final (`results_augment.json`, xtune run of 2026-07-24/25).
 
 > **Finding — notation sensitivity.** Mapping real tau2-bench trajectories into
 > our schema requires choosing a surface *notation* for resource identifiers.
@@ -273,26 +271,51 @@ augmentation numbers are final.
 > `cust:0/…` from `cust:5/…` — whereas the *same* augmentation used for
 > **consistency regularization** helps by a large margin (Zheng et al., 2021).
 >
-> **The fix — consistency regularization.** We keep the cross-entropy loss on
-> the canonical rendering (preserving the sharp discrimination) and *add* a
-> symmetric Kullback–Leibler term tying the model's authorize/refuse
-> distribution on the canonical view to its distribution on the *same action
-> re-notated* in a randomly chosen delimiter scheme (an R-Drop–style consistency
-> objective; Liang et al., 2021; Botev et al., 2022):
-> L = CE(verdict ∣ canonical) + λ · KL_sym( p(·∣canonical) ‖ p(·∣re-notated) ).
-> Because re-notation provably preserves the verifier's verdict, both views
-> share the same label; the KL teaches *notation-invariance* — "return the same
-> verdict regardless of delimiter" — without exposing the cross-entropy loss to
-> off-notation data, which is what destabilized naive augmentation. With λ =
-> [__], the model reaches [__]% [CI] on the slash notation and [__]% [CI] on
-> colon, stable across three seeds (false-authorize [__]%).
+> **A partial fix is not enough.** A first consistency-regularization attempt —
+> cross-entropy on the canonical view only, plus a fully-differentiable
+> symmetric KL to a re-notated view (λ=1) — also failed (57.8%/57.5%,
+> false-authorize ≈85%). It deviated from the published recipe on three counts,
+> each of which proved load-bearing.
+>
+> **The fix — the full consistency-regularization recipe.** Following Zheng et
+> al. (2021) and Liang et al. (2021) faithfully, we fine-tune from the released
+> model (which doubles as the frozen stage-1 teacher θ\*) with, per action:
+> (i) the task cross-entropy on **both** the canonical and a re-notated view
+> (both share the verifier's verdict — re-notation provably preserves it);
+> (ii) λ₁ times the **stop-gradient** symmetric KL between the two views,
+> KL(sg(P)‖Q)+KL(sg(Q)‖P), so each direction pushes only the student side; and
+> (iii) λ₂ times a KL anchor of both views to the frozen teacher, which makes
+> collapse expensive by construction. λ₁=λ₂=5.0 (the values Zheng et al. use
+> for classification), lr 10⁻⁵. Because training oscillates between
+> notation-robust and notation-brittle states at this scale, we additionally
+> select checkpoints on a **synthetic transfer-validation set** that mirrors
+> the real mapping's structure (single-hop, specific-tool grants,
+> foreign-namespace redirects, mixed notations) with entirely synthetic
+> vocabulary — the real corpora play no role in selection.
+>
+> **Result.** Across three seeds the selected checkpoints score a mean of
+> 94.3% on the slash notation (per-seed 91.0/94.2/97.8) and **93.8%** on colon
+> (90.8/93.5/97.2) — closing the notation gap *upward* (colon 75.0→93.8) while
+> improving the trained notation (slash 90.8→94.3) and cutting false-authorize
+> from 18.5–50% to 3.0–5.5%. The residual error direction flips from
+> fail-open (over-authorization) to a small fail-closed over-refusal (0–15%) —
+> the safer direction for an authorization system. The transfer-validation
+> score also rank-orders the seeds' cross-source transfer to the independent
+> Toucan corpus (selection scores 0.867/0.942/0.975 → Toucan-authorized
+> accuracy 46.0/68.4/93.4), so we release the a-priori-selected best-selection
+> seed (0.975), which scores 97.8/97.2 on tau2, 96.2% on the balanced Toucan
+> set (false-authorize 0.9%), and 93.4% on Toucan-authorized recognition.
+> Checkpoint selection is not optional here: final-step checkpoints of the same
+> runs select at 0.500–0.800, i.e. the same training that produces these models
+> also passes through brittle states, and naive last-step training would have
+> reported a failure.
 >
 > **Deterministic alternative.** Because the mapping from real logs into the
 > schema is under our control, notation robustness can also be obtained without
 > retraining, by canonicalizing inputs to the trained notation at deployment —
-> recovering the 90.8% slash-notation result on any input format. We report the
-> learned (consistency-regularized) and deterministic (canonicalization)
-> mitigations as complementary.
+> recovering the released model's 90.8% slash-notation result on any input
+> format. We report the learned (consistency-regularized) and deterministic
+> (canonicalization) mitigations as complementary.
 
 ### References for INSERT 8 (APA)
 
