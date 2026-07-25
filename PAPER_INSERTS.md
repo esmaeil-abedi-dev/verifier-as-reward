@@ -380,3 +380,28 @@ All numbers final (`results_augment.json`, xtune run of 2026-07-24/25).
 *Verify the Zheng et al. page range (3403–3417) against the ACL Anthology entry
 before final submission; all DOIs and author lists were confirmed against the
 published records.*
+
+---
+
+## INSERT 9 — Limitations and future work (notation-robustness arc)
+
+Goes in the Limitations section (or the end of the real-trace section).
+
+> Three limitations delimit the notation-robustness result. First, robustness
+> was trained and verified over four delimiter notations; a second
+> representation axis that our diagnostic surfaced — grant *structure* — is
+> not addressed: a wildcard-action grant (`perform '*'`) still induces
+> over-authorization in every model we trained, and extending the consistency
+> views from re-notated resources to restructured grants is the natural next
+> experiment. Second, consistency training at this scale does not converge
+> stably to notation-robustness: within a single run the transfer-selection
+> score oscillates between robust and brittle states (0.475–0.975), so
+> checkpoint selection on the transfer-validation set is load-bearing, and the
+> selected models retain real seed spread (the non-selected seeds over-refuse
+> on the independent Toucan corpus). Third, the residual ~0.87–0.94 on
+> `chain_structure` — the one scenario class where frontier models also err —
+> is unlikely to yield to further regularization; it requires reasoning over
+> chain wiring, which motivates a chain-of-thought decision format with the
+> same verifier as reward, left to future work. We do not claim these bounds
+> are fundamental to small models; they are what the present recipe achieves
+> at 0.5B.
